@@ -44,7 +44,7 @@ export default class Customer extends Component {
         if (taxExemt){
             taxExemtContent = (
                 <div style={{margin: '25px'}}>
-                     <strong>Tax Exemt</strong>
+                     <strong>Tax Exempt</strong>
                 </div>
             )
         }

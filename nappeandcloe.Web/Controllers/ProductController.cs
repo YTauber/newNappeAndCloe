@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using nappeandcloe.Data;
+using Newtonsoft.Json;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -147,10 +148,40 @@ namespace nappeandcloe.Web.Controllers
 
         [Route("GetProductById/{productId}")]
         [HttpGet]
-        public Product GetProductById(int productId)
+        public ProductView GetProductById(int productId)
         {
             ProductRepository productRepo = new ProductRepository(_connectionString);
-            return productRepo.GetProductById(productId);
+            OrderRepository orderRepo = new OrderRepository(_connectionString);
+            OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
+
+            Product p =  productRepo.GetProductById(productId);
+            return new ProductView
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                Notes = p.Notes,
+                PictureName = p.PictureName,
+                ProductLabels = p.ProductLabels,
+
+                ProductSizeViews = p.ProductSizes.Select((s) => new ProductSizeView
+                {
+                    Id = s.Id,
+                    Size = s.Size.Name,
+                    PricePer = p.Price,
+                    Quantity = s.Quantity,
+                    MinAvail = 0,
+
+                    MaxAvail = order.Date == null ? 0 : productRepo.GetMaxAvail(order.Date.Value, s.Id),
+                    Checked = order.ProductViews.Any(pr => pr.ProductSizeViews.Any(sz => sz.Id == s.Id)),
+
+                    OrderPrice = p.Price,
+                    OrderAmount = 0
+
+                }).ToList(),
+
+                CalendarEvents = orderRepo.GetOrdersForCalendarByProductId(DateTime.Now.Month, DateTime.Now.Year, p.Id).ToList()
+            };
         }
 
     }
@@ -167,5 +198,7 @@ namespace nappeandcloe.Web.Controllers
         public string Size { get; set; }
         public int Quantity { get; set; }
     }
+
    
+
 }

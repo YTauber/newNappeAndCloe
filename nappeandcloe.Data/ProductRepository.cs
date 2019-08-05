@@ -170,5 +170,18 @@ namespace nappeandcloe.Data
                 context.SaveChanges();
             }
         }
+
+        public int GetMaxAvail(DateTime date, int productSizeId)
+        {
+            using (var context = new MyContext(_connectionString))
+            {
+                int productSize = context.ProductSizes.FirstOrDefault(p => p.Id == productSizeId).Quantity;
+                int booked = context.Orders.Where(o => o.Date == date).SelectMany(o => o.OrderDetails).Where(od => od.ProductSizeId == productSizeId).Sum(q => q.Quantity);
+                return productSize - booked;
+            }
+        }
+       
     }
+
+   
 }

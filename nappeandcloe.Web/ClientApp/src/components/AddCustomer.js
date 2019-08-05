@@ -78,7 +78,7 @@ export default class AddCustomer extends Component {
                                 <br />
                                 <input name="email" type="text" className="form-control" placeholder="Email" value={email} onChange={onInputChange} />
                                 <br />
-                                <h7><input type="checkBox" checked={taxExemt} onChange={checkExemt} /><label>Tax Exemt</label></h7>
+                                <h7><input type="checkBox" checked={taxExemt} onChange={checkExemt} /><label>Tax Exempt</label></h7>
                                 <br/>
                                 <button style={{marginTop: '10px'}} onClick={addCustomer} className="btn btn-primary btn-block">Add Customer</button>
                             </div>

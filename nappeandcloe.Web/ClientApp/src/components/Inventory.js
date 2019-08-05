@@ -74,10 +74,16 @@ export default class Inventory extends Component {
         });
 
     }
+    
 
    
     tagClicked = (id) => {
         this.setState({searchId: id});
+            this.setProducts();
+    }
+
+    sizeClicked = (id) => {
+        this.setState({searchSizeId: id});
             this.setProducts();
     }
 
@@ -96,8 +102,8 @@ export default class Inventory extends Component {
 
     render() {
 
-        const {products, labels, searchContent, searchId, loading, sizes} = this.state;
-        const {tagClicked, search, viewProduct} = this;
+        const {products, labels, searchContent, searchId, loading, sizes, searchSizeId} = this.state;
+        const {tagClicked, search, viewProduct, sizeClicked} = this;
 
         
         const tagStyle = {
@@ -129,31 +135,36 @@ export default class Inventory extends Component {
                 <div>
                 <div className="container">
                     <div className='row'>
-                    <div className='col-md-2 col-md-offset-1'>
-                        {sizes.map(s => <h3>{s.name}</h3>)}
+                    <div className='col-md-3'>
+                    <div style={{marginTop: 25, textAlign: 'center'}}>
+                                <label>Sizes</label>
+                            </div>
+                            <hr />
+                            <div onClick={() => {sizeClicked()}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
+                                <h4>View All Sizes</h4>
+                            </div>
+                        {sizes.map(s => <div key={s.id} onClick={() => {sizeClicked(s.id)}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
+                                {searchSizeId === s.id ? <h3>{s.name}</h3> : <h4>{s.name}</h4>}
+                            </div>)}
                     </div>
                     <div className="col-md-6">
-                        <div>
-                            <div className="col-md-12">
-                                <div style={divStyle} className="col-md-12">
-                                <Link to='/addproduct'>
-                                    <button className="btn btn-block btn-primary">Add Product</button>
-                                </Link>
+                        <div className='row'>
+                            <div style={divStyle} className="col-md-12">
+                                 <Link to='/addproduct'>
+                                       <button className="btn btn-block btn-primary">Add Product</button>
+                                 </Link>
+                             </div>
+                            <div>
+                                <div className="col-md-12" style={divStyle}>
+                                    <input type="text" placeholder="Search name..." className="form-control" onChange={search} value={searchContent} />
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="col-md-1 col-md-offset-11">
+                                            <h4>{products.length}</h4>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                       
-                       <div>
-                            <div className="col-md-12" style={divStyle}>
-                                <input type="text" placeholder="Search name..." className="form-control" onChange={search} value={searchContent} />
-                            </div>
-                        <div className="col-md-12">
-                            <div className="col-md-1 col-md-offset-11">
-                                <h4>{products.length}</h4>
-                            </div>
-                        </div>
                        </div>
-
                        
                    
                     <div style={{textAlign: 'center'}}>
@@ -171,11 +182,15 @@ export default class Inventory extends Component {
                             )}
                     </div>
                 </div>
-                <div className='col-md-2'>
+                <div className='col-md-3'>
                   <div>
                         <div style={{marginTop: 25, textAlign: 'center'}} className="col-md-12">
-                            <h1 style={tagStyle} onClick={() => {tagClicked()}} className="btn btn-info">View All</h1>
-                                {labels.map(l => <h1 style={tagStyle} onClick={() => {tagClicked(l.id)}} className={searchId === l.id ? "btn btn-lg btn-info" : "btn btn-info"} key={l.id}>{l.name}</h1>)}
+                            <div style={{textAlign: 'center'}}>
+                                <label>Labels</label>
+                            </div>
+                            <hr />
+                            <h1 style={tagStyle} onClick={() => {tagClicked()}} className={searchId ? "btn btn-info sm" : "btn btn-info"}>View All</h1>
+                                {labels.map(l => <h1 style={tagStyle} onClick={() => {tagClicked(l.id)}} className={searchId === l.id ? "btn btn-info" : "btn btn-info btn-sm"} key={l.id}>{l.name}</h1>)}
                         </div>
                    </div>
                 </div>

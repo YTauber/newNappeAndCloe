@@ -2,17 +2,8 @@ import React, { Component } from 'react';
 import { format } from 'money-formatter';
 import axios from 'axios';
 import produce from 'immer';
+import Calendar from 'react-awesome-calendar';
 
-const customStyles = {
-    content : {
-      top                   : '50%',
-      left                  : '60%',
-      right                 : 'auto',
-      bottom                : 'auto',
-      marginRight           : '-50%',
-      transform             : 'translate(-50%, -50%)'
-    }
-  };
 
 
 export default class Product extends Component {
@@ -25,12 +16,12 @@ export default class Product extends Component {
             notes : '',
             pictureName: '',
             productLabels: [],
-            productSizes: []
+
+            productSizeViews : [],
+            calendarEvents : []
         },
 
         loading : true,
-
-        orderIds : []
     }
 
     componentDidMount = () => {
@@ -38,7 +29,6 @@ export default class Product extends Component {
         axios.get(`/api/product/getproductbyid/${this.props.match.params.id}`).then(({ data }) => {
             
             this.setState({ product: data, loading: false });
-            console.log(this.state.product)
         });
 
     }
@@ -46,9 +36,10 @@ export default class Product extends Component {
 
     reserve = () => {
         
-        const {product, orderIds} = this.state;
-        const {id, name, price, pictureName} = product;
-        axios.post('/api/draft/addOrderDetailToDraft', {orderDetails: orderIds, product : {id, name, price, pictureName}}).then(() => {
+        const {product} = this.state;
+        const {id, name, price, pictureName, productSizeViews} = product;
+
+        axios.post('/api/draft/addOrderDetailToDraft', {id, name, price, pictureName, productSizeViews: productSizeViews.filter(s => s.checked)}).then(() => {
             this.props.history.push(`/newOrder`)
         })
     }
@@ -56,12 +47,8 @@ export default class Product extends Component {
     checkOrderId = (id) => {
 
         const nextState = produce(this.state, draft => {
-            if (draft.orderIds.some(i => i=== id)){
-                draft.orderIds = draft.orderIds.filter(i => i !== id)
-            }
-            else {
-                draft.orderIds.push(id)
-            }
+            
+            draft.product.productSizeViews.find(p => p.id === id).checked = !draft.product.productSizeViews.find(p => p.id === id).checked
         });
         this.setState(nextState);
 
@@ -69,13 +56,16 @@ export default class Product extends Component {
 
     edit = () => {
 
+    }
+
+    onChangeDate = () => {
 
     }
 
     render() {
-        const {product, loading, orderIds} = this.state;
-        const {name, price, notes, pictureName, productLabels, productSizes} = product;
-        const {edit, reserve, checkOrderId} = this
+        const {product, loading} = this.state;
+        const {name, price, notes, pictureName, productLabels, productSizeViews, calendarEvents} = product;
+        const {edit, reserve, checkOrderId, onChangeDate} = this
 
       
         let notesBox = '';
@@ -127,12 +117,13 @@ export default class Product extends Component {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {productSizes.map((s) => <tr key={s.id}>
+                                            {productSizeViews.map((s) => <tr key={s.id}>
                                                 <td style={{textAlign: 'center'}}>
-                                                    <input checked={orderIds.some(i => i === s.id)} onClick={() => checkOrderId(s.id)} className='form-control' type='checkBox' />
+                                                    <input checked={s.checked} onClick={() => checkOrderId(s.id)} className='form-control' type='checkBox' />
+                                                    {s.maxAvail ? <label>{s.maxAvail} Available</label> : ''}
                                                 </td>
-                                                <td style={{textAlign: 'center'}}>{s.size.name}</td>
-                                                <td style={{textAlign: 'center'}}>{s.quantity}</td>
+                                                <td style={{textAlign: 'center'}}><h3>{s.size}</h3></td>
+                                                <td style={{textAlign: 'center'}}><h3>{s.quantity}</h3></td>
                                             </tr>)}
                                         </tbody>
                                     </table>
@@ -141,9 +132,15 @@ export default class Product extends Component {
                                     <div className="col-md-12" style={{marginTop: 25}}>
                                         <button onClick={reserve} className="btn btn-success btn-lg btn-block">Add to order</button>
                                      </div>
+                                     <div className='col-md-12' style={{marginTop: 25}}>
+                                        <Calendar
+                                                    events={calendarEvents}
+                                                    onChange={onChangeDate}
+                                                />
+                                    </div>
                                      <div className="col-md-12" style={{marginTop: 25}}>
                                         <div className="col-md-6 col-md-offset-3">
-                                            <button onClick={edit} className="btn btn-info btn-block">Edit</button>
+                                            <button onClick={edit} className="btn btn-info btn-block">Edit Product</button>
                                         </div>
                                     </div>
                                 </div>

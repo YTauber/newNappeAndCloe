@@ -5,6 +5,7 @@ import moment from 'moment';
 import { format } from 'money-formatter';
 import NumericInput from 'react-numeric-input';
 import Calendar from 'react-calendar';
+import InputNumeric from 'react-input-numeric';
 
 
 export default class NewOrder extends Component {
@@ -26,7 +27,7 @@ export default class NewOrder extends Component {
               cahrge: '',
               myCaharge: ''  
             },
-            orderDetails : [],
+            productViews : [],
             total : '',
             taxExemt : '',
             discuntAmount: '',
@@ -54,12 +55,12 @@ export default class NewOrder extends Component {
 
     addDraft = () => {
 
-        const {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, orderDetails, taxExemt} = this.state.order;
+        const {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt} = this.state.order;
         if (date){
-            axios.post(`/api/draft/addorderdraft`, {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, orderDetails, taxExemt}).then(({data}) => this.setTotals(data))
+            axios.post(`/api/draft/addorderdraft`, {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt}).then(({data}) => this.setTotals(data))
         }
         else {
-        axios.post(`/api/draft/addorderdraft`, {customerId, name, tax, deliveryCharge, discount, notes, linerId, orderDetails, taxExemt}).then(({data}) => this.setTotals(data))
+        axios.post(`/api/draft/addorderdraft`, {customerId, name, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt}).then(({data}) => this.setTotals(data))
         }
     }
 
@@ -130,13 +131,26 @@ export default class NewOrder extends Component {
         });
     }
 
-    detailChange = (e, id) => {
+    priceChange = (e, id) => {
 
         if(e.target.value){
             const nextState = produce(this.state, draft => {
 
-                let od = draft.order.orderDetails.find(d => d.productId == id)
-                od[e.target.name] = e.target.value;
+                draft.order.productViews.find(p => p.productSizeViews.some(s => s.id ===id)).productSizeViews.find(d => d.id === id).price = e.target.value
+            });
+            this.setState(nextState,() => {this.addDraft() } );
+        }
+
+        
+             
+    }
+
+    amountChange = (e, id) => {
+
+        if(e){
+            const nextState = produce(this.state, draft => {
+
+                draft.order.productViews.find(p => p.productSizeViews.some(s => s.id ===id)).productSizeViews.find(d => d.id === id).orderAmount = e
                 
             });
             this.setState(nextState,() => {this.addDraft() } );
@@ -146,28 +160,7 @@ export default class NewOrder extends Component {
              
     }
 
-    addAmount = (id) => {
-        const nextState = produce(this.state, draft => {
-            if (draft.order.orderDetails.find(d => d.productId == id).quantity < draft.order.orderDetails.find(d => d.productId == id).maxAvail){
-                draft.order.orderDetails.find(d => d.productId == id).quantity = draft.order.orderDetails.find(d => d.productId == id).quantity + 1
-
-            }
-
-        });
-        this.setState(nextState,() => {this.addDraft() } );
-    }
-
-    minusAmount = (id) => {
-
-        const nextState = produce(this.state, draft => {
-
-            if (draft.order.orderDetails.find(d => d.productId == id).quantity > 0){
-                draft.order.orderDetails.find(d => d.productId == id).quantity = draft.order.orderDetails.find(d => d.productId == id).quantity - 1
-            }
-        });
-        this.setState(nextState,() => {this.addDraft() } );
-    }
-
+    
     remove = (idx) => {
         const nextState = produce(this.state, draft => {
             draft.order.orderDetails.splice(idx, 1);
@@ -291,10 +284,10 @@ export default class NewOrder extends Component {
   
     render() {
  
-        const {date, customer, liner, name, notes, orderDetails, tax, deliveryCharge, discount, total, discuntAmount, taxExemt} = this.state.order;
+        const {date, customer, liner, name, notes, productViews, tax, deliveryCharge, discount, total, discuntAmount, taxExemt} = this.state.order;
         const {onInputChange, viewCustomer, changeCustomer, startOver, ViewProducts, viewProduct, setLinerContent, onLinerChange,
-             detailChange, addAmount, minusAmount, changeDate, checkExecmt, addDiscount, minusDiscount, addDelivaryCharge, minusDelivaryCharge,
-              addLiner, minusLiner, submit} = this;
+            priceChange, changeDate, checkExecmt, addDiscount, minusDiscount, addDelivaryCharge, minusDelivaryCharge,
+              addLiner, minusLiner, submit, amountChange} = this;
               const {message} = this.state;
 
 
@@ -396,17 +389,20 @@ export default class NewOrder extends Component {
         }
            
         let productsContent = '';
-        if (orderDetails.length > 0){
+        if (productViews.length > 0){
             productsContent = (
-                <div className="col-md-12" style={{marginTop: '15px'}}>
+                <div className='col-md-12' style={{marginTop: '25px'}}>
+                    {productViews.map(p => <div className='col-md-12 well' key={p.id}>
+                        <h1>{p.name}</h1>
+                        <div className="col-md-12" style={{marginTop: '15px'}}>
                     <table style={{textAlign: 'center'}} className="table table-striped">
                         <tr style={{textAlign: 'center'}}>
                         <th style={{textAlign:'center'}}>Remove</th>
-                            <th style={{textAlign:'center'}}>Product</th>
+                            <th style={{textAlign:'center'}}>Size</th>
                             <th style={{textAlign:'center'}}>Amount</th>
                             <th style={{textAlign:'center'}}>Your Price</th>
                         </tr>
-                        {orderDetails.map((d, idx) => <tr key={d.productId} >
+                        {p.productSizeViews.map((d, idx) => <tr key={d.productId} >
                             <td>
                                 <div style={{cursor: 'pointer'}} onClick={() => this.remove(idx)}>
                                     <h3 className="glyphicon glyphicon-remove"></h3>
@@ -415,27 +411,36 @@ export default class NewOrder extends Component {
                             <td>
                                 <div className="well" onClick={() => viewProduct(d.productId)} style={{cursor: 'pointer', textAlign: 'center', margin: '5px'}}>
                                     
-                                            <h5>{d.product.name}</h5>
+                                            <h5>{d.size}</h5>
                                 </div>
                             </td>
                             <td>
-                                    <div className="col-md-2 col-md-offset-3" style={{cursor: 'pointer'}} onClick={() => minusAmount(d.product.id)}>
-                                        <h3 className="glyphicon glyphicon-menu-left"></h3>
-                                    </div>
-                                    <div className="col-md-2">
-                                        <h3>{d.quantity}</h3>
-                                    </div>
-                                    <div className="col-md-2" style={{cursor: 'pointer'}} onClick={() => addAmount(d.product.id)}>
-                                        <h3 className="glyphicon glyphicon-menu-right"></h3>
-                                    </div>
+                                <InputNumeric
+                                    value={d.orderAmount}
+                                    onChange={(e) => amountChange(e, d.id)}
+                                    min={d.minAvail}
+                                    max={d.maxAvail}
+                                />
                             </td>
                             <td>
                                 <div style={{textAlign:'center'}}>
                                     
-                                     <input style={{marginLeft: '25%', width: '50%'}} name="pricePer" type="text" className="form-control" value={d.pricePer} onChange={(e) => detailChange(e, d.product.id)} />
+                                     <input 
+                                        style={{marginLeft: '25%', width: '50%'}}
+                                        type="text" 
+                                        className="form-control" 
+                                        value={d.pricePer} 
+                                        onChange={(e) => priceChange(e, d.id)} />
                                 </div>
                             </td>
                         </tr>)}
+                        </table>
+                        </div>
+                        </div>
+                       
+                    )}
+                    
+                    <table style={{textAlign: 'center'}} className="table table-striped">
                         {linerContent}
                         <tr>
                             <td colSpan={3}></td>
@@ -447,7 +452,7 @@ export default class NewOrder extends Component {
                                         <label onClick={addDelivaryCharge} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-plus"></label>
                                     </h7>
                                 </h4>
-                          </td>
+                        </td>
                         </tr>
                         <tr>
                             <td colSpan={3}></td>
@@ -459,7 +464,7 @@ export default class NewOrder extends Component {
                                         <span onClick={addDiscount} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-plus"></span>
                                     </h7>
                                 <strong>{format('USD', discuntAmount)}</strong></h4>
-                          </td>
+                        </td>
                         </tr>
                         <tr>
                             <td colSpan={3}></td>
@@ -479,9 +484,12 @@ export default class NewOrder extends Component {
                                 <button onClick={submit} style={{marginTop: '20px'}} className="btn btn-success btn-block">Submit Order</button>
                             </td>
                         </tr>
-                    </table>
-                </div>
-            )
+                        </table>
+                        </div>
+                )
+                
+                        
+          
         } 
 
 
