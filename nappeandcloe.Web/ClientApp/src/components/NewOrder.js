@@ -512,7 +512,7 @@ export default class NewOrder extends Component {
                                     <label>Enter Event Name</label>
                                     <input type='text' name='name' className="form-control" value={name} placeholder="Name" onChange={onInputChange} />
                                 </div>
-                            </div>
+                            
                             <div style={{marginTop: '20px'}}>
                                     <label>Enter Event Address</label>
                                     <input type='text' name='address' className="form-control" value={address} placeholder="Address" onChange={onInputChange} />
