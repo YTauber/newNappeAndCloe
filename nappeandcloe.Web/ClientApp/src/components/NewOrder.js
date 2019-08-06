@@ -17,6 +17,7 @@ export default class NewOrder extends Component {
                 name :''
             },
             name : '',
+            address : '',
             date : '',
             tax : '',
             deliveryCharge: '',
@@ -161,9 +162,11 @@ export default class NewOrder extends Component {
     }
 
     
-    remove = (idx) => {
+    remove = (id) => {
         const nextState = produce(this.state, draft => {
-            draft.order.orderDetails.splice(idx, 1);
+
+            draft.order.productViews.forEach(p => p.productSizeViews = p.productSizeViews.filter(s => s.id !== id));
+
         });
         this.setState(nextState,() => {this.addDraft() } );
     }
@@ -284,7 +287,7 @@ export default class NewOrder extends Component {
   
     render() {
  
-        const {date, customer, liner, name, notes, productViews, tax, deliveryCharge, discount, total, discuntAmount, taxExemt} = this.state.order;
+        const {date, customer, liner, name, notes, productViews, tax, deliveryCharge, discount, total, discuntAmount, taxExemt, address} = this.state.order;
         const {onInputChange, viewCustomer, changeCustomer, startOver, ViewProducts, viewProduct, setLinerContent, onLinerChange,
             priceChange, changeDate, checkExecmt, addDiscount, minusDiscount, addDelivaryCharge, minusDelivaryCharge,
               addLiner, minusLiner, submit, amountChange} = this;
@@ -392,8 +395,8 @@ export default class NewOrder extends Component {
         if (productViews.length > 0){
             productsContent = (
                 <div className='col-md-12' style={{marginTop: '25px'}}>
-                    {productViews.map(p => <div className='col-md-12 well' key={p.id}>
-                        <h1>{p.name}</h1>
+                    {productViews.filter(p => p.productSizeViews.length).map(p => <div className='col-md-12 well' key={p.id}>
+                        <h1 style={{cursor : 'pointer'}} onClick={() => viewProduct(p.id)}>{p.name}</h1>
                         <div className="col-md-12" style={{marginTop: '15px'}}>
                     <table style={{textAlign: 'center'}} className="table table-striped">
                         <tr style={{textAlign: 'center'}}>
@@ -402,16 +405,16 @@ export default class NewOrder extends Component {
                             <th style={{textAlign:'center'}}>Amount</th>
                             <th style={{textAlign:'center'}}>Your Price</th>
                         </tr>
-                        {p.productSizeViews.map((d, idx) => <tr key={d.productId} >
+                        {p.productSizeViews.map((d) => <tr key={d.productId} >
                             <td>
-                                <div style={{cursor: 'pointer'}} onClick={() => this.remove(idx)}>
+                                <div style={{cursor: 'pointer'}} onClick={() => this.remove(d.id)}>
                                     <h3 className="glyphicon glyphicon-remove"></h3>
                                 </div>
                             </td>
                             <td>
-                                <div className="well" onClick={() => viewProduct(d.productId)} style={{cursor: 'pointer', textAlign: 'center', margin: '5px'}}>
+                                <div  style={{cursor: 'pointer', textAlign: 'center', margin: '5px'}}>
                                     
-                                            <h5>{d.size}</h5>
+                                            <h2>{d.size}</h2>
                                 </div>
                             </td>
                             <td>
@@ -421,6 +424,8 @@ export default class NewOrder extends Component {
                                     min={d.minAvail}
                                     max={d.maxAvail}
                                 />
+                               <br />
+                               {d.maxAvail ? <label style={{marginTop: 10}}>{d.maxAvail} Available</label> : ''}
                             </td>
                             <td>
                                 <div style={{textAlign:'center'}}>
@@ -448,7 +453,7 @@ export default class NewOrder extends Component {
                                 <h4 style={{marginTop: '15px'}}>Delivery Charge:
                                     <h7>
                                         <label onClick={minusDelivaryCharge} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-minus"></label>
-                                        $ {deliveryCharge} 
+                                            $ {deliveryCharge} 
                                         <label onClick={addDelivaryCharge} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-plus"></label>
                                     </h7>
                                 </h4>
@@ -503,9 +508,14 @@ export default class NewOrder extends Component {
                         <div className="col-md-10 col-md-offset-1" style={{border: '1px solid', borderRadius: '5px', padding: '10px'}}>
                         <div className="col-md-6" style={{marginTop: '15px'}}>
                             {customerContent}
-                            <div style={{marginTop: '35px'}}>
+                            <div style={{marginTop: '20px'}}>
                                     <label>Enter Event Name</label>
                                     <input type='text' name='name' className="form-control" value={name} placeholder="Name" onChange={onInputChange} />
+                                </div>
+                            </div>
+                            <div style={{marginTop: '20px'}}>
+                                    <label>Enter Event Address</label>
+                                    <input type='text' name='address' className="form-control" value={address} placeholder="Address" onChange={onInputChange} />
                                 </div>
                             </div>
                             <div className="col-md-6" style={{marginTop: '15px'}}>

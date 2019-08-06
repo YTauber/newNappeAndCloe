@@ -170,18 +170,33 @@ namespace nappeandcloe.Web.Controllers
                     Size = s.Size.Name,
                     PricePer = p.Price,
                     Quantity = s.Quantity,
+
                     MinAvail = 0,
 
                     MaxAvail = order.Date == null ? 0 : productRepo.GetMaxAvail(order.Date.Value, s.Id),
                     Checked = order.ProductViews.Any(pr => pr.ProductSizeViews.Any(sz => sz.Id == s.Id)),
 
                     OrderPrice = p.Price,
-                    OrderAmount = 0
+                    OrderAmount = GetOrderAmount(s.Id)
 
                 }).ToList(),
 
                 CalendarEvents = orderRepo.GetOrdersForCalendarByProductId(DateTime.Now.Month, DateTime.Now.Year, p.Id).ToList()
             };
+        }
+
+        private int GetOrderAmount(int id)
+        {
+            OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
+            ProductSizeView productSize = order.ProductViews.SelectMany(p => p.ProductSizeViews).FirstOrDefault(s => s.Id == id);
+            if (productSize == null)
+            {
+                return 0;
+            }
+            else
+            {
+                return productSize.OrderAmount;
+            }
         }
 
     }

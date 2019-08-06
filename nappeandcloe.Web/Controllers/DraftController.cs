@@ -56,9 +56,10 @@ namespace nappeandcloe.Web.Controllers
         {
             OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
             order.Date = orderView.Date;
-            //order.OrderDetails.ForEach(d => d.Quantity = 0);
+            
             order = SetAvail(order);
             order = SetTotal(order);
+
             HttpContext.Session.Set("order", order);
         }
 
@@ -101,24 +102,20 @@ namespace nappeandcloe.Web.Controllers
         }
 
 
-        private OrderView SetAvail(OrderView odv)
+        private OrderView SetAvail(OrderView order)
         {
-            OrderRepository orderRepo = new OrderRepository(_connectionString);
+            ProductRepository productRepo = new ProductRepository(_connectionString);
 
-            //if (odv.Date != null)
-            //{
-            //    IEnumerable<Order> orders = orderRepo.GetOrdersByDate(odv.Date.Value);
-            //    foreach (OrderDetailsView d in odv.OrderDetails)
-            //    {
-            //        d.MaxAvail = (d.ProductSize.Quantity) - (orders.SelectMany(o => o.OrderDetails.Where(od => od.ProductSizeId == d.ProductSizeId)).Sum(s => s.Quantity));
-            //    }
-            //}
-            //else
-            //{
-            //     odv.OrderDetails.ForEach(d => d.MaxAvail = 0);
-            //}
+            foreach (ProductSizeView size in order.ProductViews.SelectMany(p => p.ProductSizeViews))
+            {
+                size.MaxAvail = order.Date == null ? 0 : productRepo.GetMaxAvail(order.Date.Value, size.Id);
+                if (size.OrderAmount > size.MaxAvail)
+                {
+                    size.OrderAmount = size.MaxAvail;
+                }
+            }
 
-            return odv;
+            return order;
         }
 
         private OrderView SetTotal(OrderView odv)

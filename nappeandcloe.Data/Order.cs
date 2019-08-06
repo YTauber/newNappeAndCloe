@@ -14,6 +14,7 @@ namespace nappeandcloe.Data
         public decimal Discount { get; set; }
         public string Notes { get; set; }
         public int? LinerId { get; set; }
+        public string Address { get; set; }
 
         public List<OrderDetail> OrderDetails { get; set; }
 

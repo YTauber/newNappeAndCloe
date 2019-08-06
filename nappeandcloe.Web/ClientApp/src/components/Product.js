@@ -3,6 +3,7 @@ import { format } from 'money-formatter';
 import axios from 'axios';
 import produce from 'immer';
 import Calendar from 'react-awesome-calendar';
+import InputNumeric from 'react-input-numeric';
 
 
 
@@ -21,6 +22,7 @@ export default class Product extends Component {
             calendarEvents : []
         },
 
+        message : '',
         loading : true,
     }
 
@@ -39,9 +41,15 @@ export default class Product extends Component {
         const {product} = this.state;
         const {id, name, price, pictureName, productSizeViews} = product;
 
-        axios.post('/api/draft/addOrderDetailToDraft', {id, name, price, pictureName, productSizeViews: productSizeViews.filter(s => s.checked)}).then(() => {
-            this.props.history.push(`/newOrder`)
-        })
+        if (productSizeViews.every(s => !s.checked)){
+            this.setState({message : 'You have to check at least one size... :('})
+        }
+        else {
+            axios.post('/api/draft/addOrderDetailToDraft', {id, name, price, pictureName, productSizeViews: productSizeViews.filter(s => s.checked)}).then(() => {
+                this.props.history.push(`/newOrder`)
+            })
+        }
+       
     }
 
     checkOrderId = (id) => {
@@ -54,6 +62,16 @@ export default class Product extends Component {
 
     }
 
+    amountChange = (e, id) => {
+
+        const nextState = produce(this.state, draft => {
+            
+            draft.product.productSizeViews.find(p => p.id === id).orderAmount = e
+        });
+        this.setState(nextState);        
+
+    }
+
     edit = () => {
 
     }
@@ -63,9 +81,9 @@ export default class Product extends Component {
     }
 
     render() {
-        const {product, loading} = this.state;
+        const {product, loading, message} = this.state;
         const {name, price, notes, pictureName, productLabels, productSizeViews, calendarEvents} = product;
-        const {edit, reserve, checkOrderId, onChangeDate} = this
+        const {edit, reserve, checkOrderId, onChangeDate, amountChange} = this
 
       
         let notesBox = '';
@@ -73,6 +91,13 @@ export default class Product extends Component {
             notesBox = (<div className="col-md-12" style={{textAlign: 'center', border: '1px solid', borderRadius: '5px', margin: '10px', padding: '10px'}}>
                             <p style={{whiteSpace: 'pre-line'}}>{notes}</p>
                         </div>)
+        }
+
+        let mssgeContent = '';
+        if (message){
+            mssgeContent = (<div style={{textAlign: 'center'}} className="alert alert-danger" role="alert">
+                                    {message}
+                            </div>)
         }
 
         let content = '';
@@ -89,16 +114,11 @@ export default class Product extends Component {
                                      <img src={`/UploadedImages/${pictureName}`} alt='pic' className="img-responsive" style={{maxHeight: '200px', borderRadius: '50%'}} />
                                 </div>
                                 <div className="col-md-12" style={{textAlign: 'center'}}>
-                                    <h2>{name}</h2>
+                                    <h1>{name}</h1>
                                </div>
                                 <div className="row">
-                                    <div className="col-md-6" style={{textAlign: 'center'}}>
+                                    <div className="col-md-12" style={{textAlign: 'center'}}>
                                         <h4>{format('USD', price)} each</h4>
-                                        <h4>fooo</h4>
-                                        <h4>fooo</h4>
-                                    </div>
-                                    <div className="col-md-6" style={{textAlign: 'center'}}>
-                                        <h4>fooo</h4>
                                         <h4>fooo</h4>
                                         <h4>fooo</h4>
                                     </div>
@@ -119,8 +139,15 @@ export default class Product extends Component {
                                         <tbody>
                                             {productSizeViews.map((s) => <tr key={s.id}>
                                                 <td style={{textAlign: 'center'}}>
-                                                    <input checked={s.checked} onClick={() => checkOrderId(s.id)} className='form-control' type='checkBox' />
-                                                    {s.maxAvail ? <label>{s.maxAvail} Available</label> : ''}
+                                                    <input checked={s.checked} onClick={() => checkOrderId(s.id)} type='checkBox' />
+                                                    {s.checked ? <InputNumeric
+                                                                        value={s.orderAmount}
+                                                                        onChange={(e) => amountChange(e, s.id)}
+                                                                        min={s.minAvail}
+                                                                        max={s.maxAvail}
+                                                                    /> : ''}
+                                                                    <br />
+                                                    {s.maxAvail ? <label style={{marginTop: 10}}>{s.maxAvail} Available</label> : ''}
                                                 </td>
                                                 <td style={{textAlign: 'center'}}><h3>{s.size}</h3></td>
                                                 <td style={{textAlign: 'center'}}><h3>{s.quantity}</h3></td>
@@ -128,6 +155,10 @@ export default class Product extends Component {
                                         </tbody>
                                     </table>
                                 </div>
+                                <div className='row'>
+                                    
+                                </div>
+                                {mssgeContent}
                                 <div className="row">
                                     <div className="col-md-12" style={{marginTop: 25}}>
                                         <button onClick={reserve} className="btn btn-success btn-lg btn-block">Add to order</button>
