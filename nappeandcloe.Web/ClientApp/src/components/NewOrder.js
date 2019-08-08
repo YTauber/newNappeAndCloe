@@ -48,7 +48,25 @@ export default class NewOrder extends Component {
     getDraft = () => {
         axios.get('/api/draft/getDraftOrder').then(({ data }) => {
 
-            this.setState({ order: data, loading: false });
+            const nextState = produce(this.state, draft => {
+                draft.order = data;
+            });
+            this.setState(nextState);
+
+            this.getCustomer(data.customerId)
+            console.log(data)
+        });
+
+    }
+
+    getCustomer = (id) => {
+
+        axios.get(`/api/customer/getCustomerbyid/${id}`).then(({ data }) => {
+
+            const nextState = produce(this.state, draft => {
+                draft.order.customer = data;
+            });
+            this.setState(nextState);
             console.log(data)
         });
 
@@ -240,8 +258,7 @@ export default class NewOrder extends Component {
     }
 
     submit = () => {
-        const {customerId, customer, name, date, deliveryCharge, discount, notes, orderDetails, taxExemt, liner} = this.state.order;
-        const {quantity, cahrge, myCaharge} = liner;
+        const {customer, name, date, productViews} = this.state.order;
 
         if (!date){
             this.setState({message : 'Please select a Date'});
@@ -252,35 +269,14 @@ export default class NewOrder extends Component {
         else if (!name){
             this.setState({message: 'Please select an Event Name'})
         }
-        else if (orderDetails.length === 0){
+        else if (!productViews.length){
             this.setState({message: 'Please select Products'})
         }
         else{
-            if (liner.quantity){
-                axios.post('api/order/addLiner', {quantity, cahrge, myCaharge}).then(({data}) => {
-                    const linerId = data;
-                    axios.post('/api/order/addOrder', {linerId, name, date, taxExemt, deliveryCharge, discount, notes, customerId }).then(({data}) => {
-                        const orderId = data;
-                        console.log(orderId)
-                        axios.post('api/order/addOrderDetails', {orderDetails, orderId}).then(() => {
-                            this.startOver()
-                            this.props.history.push('/')
-
-                        });
-                    })
-                })
-            }
-            else{
-                axios.post('/api/order/addOrder', {name, date, taxExemt, deliveryCharge, discount, notes, customerId  }).then(({data}) => {
-                    const orderId = data;
-                    console.log(orderDetails)
-                    axios.post('api/order/addOrderDetails', {orderDetails, orderId}).then(() => {
-                        this.startOver();
-                        this.props.history.push('/')
-                    });
-                })
-            }
-                
+            axios.post('/api/order/addOrder').then(() => {
+                this.startOver();
+                this.props.history.push('/');
+            })
         }
     }
 
@@ -445,11 +441,11 @@ export default class NewOrder extends Component {
                        
                     )}
                     
-                    <table style={{textAlign: 'center'}} className="table table-striped">
+                    <table style={{textAlign: 'center'}} className="table">
                         {linerContent}
                         <tr>
-                            <td colSpan={3}></td>
-                            <td>
+                            
+                            <td colSpan={4}>
                                 <h4 style={{marginTop: '15px'}}>Delivery Charge:
                                     <h7>
                                         <label onClick={minusDelivaryCharge} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-minus"></label>
@@ -460,8 +456,7 @@ export default class NewOrder extends Component {
                         </td>
                         </tr>
                         <tr>
-                            <td colSpan={3}></td>
-                            <td>
+                            <td colSpan={4}>
                                 <h4 style={{marginTop: '15px'}}>Discount:
                                     <h7>
                                         <label onClick={minusDiscount} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-minus"></label>
@@ -472,19 +467,16 @@ export default class NewOrder extends Component {
                         </td>
                         </tr>
                         <tr>
-                            <td colSpan={3}></td>
-                            <td>
+                            <td colSpan={4}>
                                 <h4 style={{marginTop: '15px'}}>Tax: <strong>{format('USD', tax)}</strong>
                                 <input style={{marginLeft: '10px'}} checked={taxExemt} type='checkBox' onChange={checkExecmt} /><small>Tax exempt</small></h4>
                             </td>
                         </tr>
                         <tr>
-                            <td colSpan={3}></td>
-                            <td><h3>Total: <strong>{format('USD', total)}</strong></h3></td>
+                            <td colSpan={4}><h3>Total: <strong>{format('USD', total)}</strong></h3></td>
                         </tr>
                         <tr>
-                            <td colSpan={3}></td>
-                            <td>
+                            <td colSpan={4}>
                                 {messg}
                                 <button onClick={submit} style={{marginTop: '20px'}} className="btn btn-success btn-block">Submit Order</button>
                             </td>
@@ -508,14 +500,12 @@ export default class NewOrder extends Component {
                         <div className="col-md-10 col-md-offset-1" style={{border: '1px solid', borderRadius: '5px', padding: '10px'}}>
                         <div className="col-md-6" style={{marginTop: '15px'}}>
                             {customerContent}
-                            <div style={{marginTop: '20px'}}>
-                                    <label>Enter Event Name</label>
-                                    <input type='text' name='name' className="form-control" value={name} placeholder="Name" onChange={onInputChange} />
+                            <div style={{marginTop: '15px'}}>
+                                    <input type='text' name='name' className="form-control" value={name} placeholder="Event Name" onChange={onInputChange} />
                                 </div>
                             
-                            <div style={{marginTop: '20px'}}>
-                                    <label>Enter Event Address</label>
-                                    <input type='text' name='address' className="form-control" value={address} placeholder="Address" onChange={onInputChange} />
+                            <div style={{marginTop: '15px'}}>
+                                    <input type='text' name='address' className="form-control" value={address} placeholder="Event Address" onChange={onInputChange} />
                                 </div>
                             </div>
                             <div className="col-md-6" style={{marginTop: '15px'}}>

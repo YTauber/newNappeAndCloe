@@ -30,32 +30,29 @@ namespace nappeandcloe.Web.Controllers
 
         [HttpPost]
         [Route("AddOrder")]
-        public int AddOrder(Order order) 
+        public void AddOrder() 
         {
             OrderRepository OrderRepo = new OrderRepository(_connectionString);
-            
-            OrderRepo.AddOrder(order);
-           
-            return order.Id;
-        }
+            OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
 
-        [HttpPost]
-        [Route("AddOrderDetails")]
-        public void AddOrderDetails(OrderView2 order)
-        {
-            OrderRepository OrderRepo = new OrderRepository(_connectionString);
-            foreach (OrderDetail od in order.OrderDetails)
+            int orderId = OrderRepo.AddOrder(new Order
             {
-                od.OrderId = order.OrderId;
-                od.ProductSize = null;
-            }
-            OrderRepo.AddOrderDetails(order.OrderDetails);
+                Address = order.Address,
+                CustomerId = order.CustomerId,
+                Date = order.Date.Value,
+                Name = order.Name,
+                Notes = order.Notes,
+                TaxExemt = order.TaxExemt,
+                DeliveryCharge = order.DeliveryCharge,
+                Discount = order.Discount
+            });
+            OrderRepo.AddOrderDetails(order.ProductViews.SelectMany(p => p.ProductSizeViews).Select(s => new OrderDetail
+            {
+                OrderId = orderId,
+                ProductSizeId = s.Id,
+                Quantity = s.OrderAmount,
+                PricePer = s.PricePer
+            }));
         }
-    }
-
-    public class OrderView2
-    {
-        public int OrderId { get; set; }
-        public IEnumerable<OrderDetail> OrderDetails { get; set; }
     }
 }

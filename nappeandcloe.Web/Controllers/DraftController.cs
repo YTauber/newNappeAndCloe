@@ -30,6 +30,8 @@ namespace nappeandcloe.Web.Controllers
             order.ProductViews.Remove(productView);
             order.ProductViews.Add(product);
 
+            order = SetTotal(order);
+
             HttpContext.Session.Set("order", order);
         }
 
@@ -42,11 +44,11 @@ namespace nappeandcloe.Web.Controllers
 
             OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
             order.CustomerId = customer.Id;
-            order.Customer = new Customer { Id = c.Id, Name = c.Name };
 
             order.TaxExemt = c.TaxExemt;
+            order.Address = c.Address;
 
-            //order = SetTotal(order);
+            order = SetTotal(order);
             HttpContext.Session.Set("order", order);
         }
 
@@ -118,27 +120,27 @@ namespace nappeandcloe.Web.Controllers
             return order;
         }
 
-        private OrderView SetTotal(OrderView odv)
+        private OrderView SetTotal(OrderView order)
         {
             double t = 1.08735;
             decimal ta = (decimal)t;
-            odv.Total = 0;
-            odv.Tax = 0;
-            odv.DiscuntAmount = 0;
-            //foreach (OrderDetailsView d in odv.OrderDetails)
-            //{
-            //    odv.Total += d.Quantity * d.PricePer;
-            //}
-            odv.Total += odv.Liner.Quantity * odv.Liner.Cahrge;
-            odv.Total += odv.DeliveryCharge;
-            if (!odv.TaxExemt)
+            order.Total = 0;
+            order.Tax = 0;
+            order.DiscuntAmount = 0;
+            foreach (ProductSizeView size in order.ProductViews.SelectMany(p => p.ProductSizeViews))
             {
-                odv.Tax = (odv.Total * ta) - odv.Total;
-                odv.Total += odv.Tax;
+                order.Total += size.OrderAmount * size.PricePer;
             }
-            odv.DiscuntAmount = (odv.Total * odv.Discount) / 100;
-            odv.Total -= odv.DiscuntAmount;
-            return odv;
+            order.Total += order.Liner.Quantity * order.Liner.Cahrge;
+            order.Total += order.DeliveryCharge;
+            order.DiscuntAmount = (order.Total * order.Discount) / 100;
+            if (!order.TaxExemt)
+            {
+                order.Tax = (order.Total * ta) - order.Total;
+                order.Total += order.Tax;
+            }
+            order.Total -= order.DiscuntAmount;
+            return order;
         }
 
     }

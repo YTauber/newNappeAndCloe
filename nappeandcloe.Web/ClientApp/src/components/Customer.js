@@ -48,7 +48,7 @@ export default class Customer extends Component {
                 </div>
             )
         }
-
+//home earphone / phone-alt comment envelope
         return (
             <div>
                 <div className="container" style={{marginTop: '30px'}}>
@@ -59,8 +59,10 @@ export default class Customer extends Component {
                                     <h1>{name}</h1>
                                 </div>
                             </div>
+                            
                             <div className="row">
                                 <div className="col-md-12" style={{textAlign: 'center'}}>
+                                    
                                     <h3>{phone}</h3>
                                     <h3>{address}</h3>
                                     <h3>{email}</h3>

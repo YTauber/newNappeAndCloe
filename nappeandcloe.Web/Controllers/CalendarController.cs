@@ -25,9 +25,50 @@ namespace nappeandcloe.Web.Controllers
         {
             OrderRepository orderRepo = new OrderRepository(_connectionString);
             HebCalRepository hebCalrepo = new HebCalRepository();
+
             List<CalendarEvent> calendarEvents =  hebCalrepo.GetJewishEvents(month, year).ToList();
             calendarEvents.AddRange(orderRepo.GetOrdersForCalendar(month, year));
+
+            OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
+            if (order.Date.HasValue && order.Date.Value.Year == year && order.Date.Value.Month == month)
+            {
+                calendarEvents.Add(new CalendarEvent
+                {
+                    title = "Draft",
+                    Id = 12212,
+                    From = order.Date.Value,
+                    To = order.Date.Value,
+                    Color = "#125422"
+                });
+            }
+
             return calendarEvents;
+        }
+
+        [Route("GetCalendarEventsByDay/{month}/{year}/{day}")]
+        [HttpGet]
+        public IEnumerable<CalendarEvent> GetCalendarEventsByDay(int month, int year, int day)
+        {
+            OrderRepository orderRepo = new OrderRepository(_connectionString);
+            HebCalRepository hebCalrepo = new HebCalRepository();
+
+            List<CalendarEvent> calendarEvents = hebCalrepo.GetJewishEvents(month, year).ToList();
+            calendarEvents.AddRange(orderRepo.GetOrdersForCalendar(month, year));
+
+            OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
+            if (order.Date.HasValue && order.Date.Value.Year == year && order.Date.Value.Month == month)
+            {
+                calendarEvents.Add(new CalendarEvent
+                {
+                    title = "Draft",
+                    Id = 12212,
+                    From = order.Date.Value,
+                    To = order.Date.Value,
+                    Color = "#125422"
+                });
+            }
+
+            return calendarEvents.Where(c => c.From.Day == day);
         }
     }
 }

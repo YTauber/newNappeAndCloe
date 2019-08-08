@@ -24,13 +24,13 @@ namespace nappeandcloe.Data
             }
         }
 
-        public Order AddOrder(Order order)
+        public int AddOrder(Order order)
         {
             using (MyContext context = new MyContext(_connectionString))
             {
                 context.Orders.Add(order);
                 context.SaveChanges();
-                return order;
+                return order.Id;
             }
         }
 
