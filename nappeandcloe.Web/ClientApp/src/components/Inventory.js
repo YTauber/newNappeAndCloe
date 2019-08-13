@@ -201,6 +201,9 @@ export default class Inventory extends Component {
 
         return (
             <div>
+                <div className='row' style={{margin: 15}}>
+                    <button onClick={() => this.props.history.goBack()} className='btn btn-sm btn-primary'>Back</button>                     
+               </div>
                 {content}
             </div>
         )

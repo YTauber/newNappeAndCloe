@@ -91,7 +91,7 @@ namespace nappeandcloe.Data
         {
             using (MyContext context = new MyContext(_connectionString))
             {
-                return context.Orders.Include(o => o.OrderDetails).Where(o => o.Date == date).ToList();
+                return context.Orders.Include(o => o.OrderDetails).Where(o => o.Date.Month == date.Month && o.Date.Year == date.Year && o.Date.Day == date.Day).ToList();
             }
         }
     }

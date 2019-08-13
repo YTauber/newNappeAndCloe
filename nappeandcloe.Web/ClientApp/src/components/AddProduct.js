@@ -152,6 +152,9 @@ export default class AddProduct extends Component {
 
         return (
             <div className="container">
+               <div className='row' style={{margin: 15}}>
+                    <button onClick={() => this.props.history.goBack()} className='btn btn-sm btn-primary'>Back</button>                     
+               </div>
                 <div className="row">
                     <div style={styles} className="well col-md-6 col-md-offset-3">
                         <div className="col-md-offset-4" style={{textAlign: 'center'}}>

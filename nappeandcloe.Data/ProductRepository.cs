@@ -158,6 +158,30 @@ namespace nappeandcloe.Data
             }
         }
 
+        public ProductSize GetProductSizeById(int id)
+        {
+            using (MyContext context = new MyContext(_connectionString))
+            {
+                return context.ProductSizes.FirstOrDefault(p => p.Id == id);
+            }
+        }
+
+        public Size GetSizeById(int id)
+        {
+            using (MyContext context = new MyContext(_connectionString))
+            {
+                return context.Sizes.FirstOrDefault(p => p.Id == id);
+            }
+        }
+
+        public Product GetProductByProductSizeId(int id)
+        {
+            using (MyContext context = new MyContext(_connectionString))
+            {
+                return context.Products.FirstOrDefault(p => p.ProductSizes.Any(s => s.Id == id));
+            }
+        }
+
         public void UpdateProduct(Product product)
         {
             using (var context = new MyContext(_connectionString))
@@ -180,8 +204,17 @@ namespace nappeandcloe.Data
                 return productSize - booked;
             }
         }
-       
+
+
+        public int GetMinAvail(DateTime date, int productSizeId)
+        {
+            using (var context = new MyContext(_connectionString))
+            {
+                return context.Orders.Where(o => o.Date == date).SelectMany(o => o.OrderDetails).Where(od => od.ProductSizeId == productSizeId).Sum(q => q.PickUps);
+            }
+        }
+
     }
 
-   
+
 }

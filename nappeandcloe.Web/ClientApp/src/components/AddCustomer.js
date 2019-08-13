@@ -65,6 +65,9 @@ export default class AddCustomer extends Component {
 
         return (
             <div>
+              <div className='row' style={{margin: 15}}>
+                    <button onClick={() => this.props.history.goBack()} className='btn btn-sm btn-primary'>Back</button>                     
+               </div> 
                 <div className="container" style={{marginTop: '40px'}}>
                     <div className="row">
                         <div className="col-md-4 col-md-offset-4">

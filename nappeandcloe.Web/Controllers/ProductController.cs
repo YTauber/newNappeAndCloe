@@ -146,16 +146,16 @@ namespace nappeandcloe.Web.Controllers
             return productRepo.GetAllProductLabels();
         }
 
-        [Route("GetProductById/{productId}")]
+        [Route("GetProductById/{productId}/{month}/{year}")]
         [HttpGet]
-        public ProductView GetProductById(int productId)
+        public ProductView GetProductById(int productId, int month, int year)
         {
             ProductRepository productRepo = new ProductRepository(_connectionString);
             OrderRepository orderRepo = new OrderRepository(_connectionString);
             OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
 
             Product p =  productRepo.GetProductById(productId);
-            return new ProductView
+            ProductView productView = new ProductView
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -181,8 +181,20 @@ namespace nappeandcloe.Web.Controllers
 
                 }).ToList(),
 
-                CalendarEvents = orderRepo.GetOrdersForCalendarByProductId(DateTime.Now.Month, DateTime.Now.Year, p.Id).ToList()
+                CalendarEvents = orderRepo.GetOrdersForCalendarByProductId(month, year, p.Id).ToList()
             };
+            if (order.Date.HasValue && order.Date.Value.Year == year && order.Date.Value.Month == month)
+            {
+                productView.CalendarEvents.Add(new CalendarEvent
+                {
+                    title = "Draft",
+                    Id = 12212,
+                    From = order.Date.Value,
+                    To = order.Date.Value,
+                    Color = "#125422"
+                });
+            }
+            return productView;
         }
 
         private int GetOrderAmount(int id)

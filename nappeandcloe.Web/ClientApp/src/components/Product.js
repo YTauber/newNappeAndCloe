@@ -24,11 +24,18 @@ export default class Product extends Component {
 
         message : '',
         loading : true,
+        date: new Date()
     }
 
     componentDidMount = () => {
 
-        axios.get(`/api/product/getproductbyid/${this.props.match.params.id}`).then(({ data }) => {
+       this.setProduct();
+    }
+
+    setProduct = () => {
+        const{date} = this.state;
+
+        axios.get(`/api/product/getproductbyid/${this.props.match.params.id}/${date.getMonth() + 1}/${date.getFullYear()}`).then(({ data }) => {
             
             this.setState({ product: data, loading: false });
         });
@@ -76,8 +83,19 @@ export default class Product extends Component {
 
     }
 
-    onChangeDate = () => {
-
+    onChangeDate = (d) => {
+        
+        if (d.mode === "monthlyMode"){
+            const date = new Date(d.year, d.month);
+        this.setState({date}, () => {
+          this.setProduct();
+        })
+           
+          }
+          if (d.mode === "dailyMode"){
+            const {month, day, year} = d;
+            this.props.history.push(`/ViewDay/${month}/${day}/${year}`);
+          }
     }
 
     render() {
@@ -140,7 +158,7 @@ export default class Product extends Component {
                                             {productSizeViews.map((s) => <tr key={s.id}>
                                                 <td style={{textAlign: 'center'}}>
                                                     <input checked={s.checked} onClick={() => checkOrderId(s.id)} type='checkBox' />
-                                                    {s.checked ? <InputNumeric
+                                                    {s.checked && s.maxAvail ? <InputNumeric
                                                                         value={s.orderAmount}
                                                                         onChange={(e) => amountChange(e, s.id)}
                                                                         min={s.minAvail}
@@ -191,6 +209,9 @@ export default class Product extends Component {
 
         return (
             <div>
+                <div className='row' style={{margin: 15}}>
+                    <button onClick={() => this.props.history.goBack()} className='btn btn-sm btn-primary'>Back</button>                     
+               </div>
                 {content}
             </div>
         )

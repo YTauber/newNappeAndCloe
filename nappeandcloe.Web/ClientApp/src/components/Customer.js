@@ -51,6 +51,9 @@ export default class Customer extends Component {
 //home earphone / phone-alt comment envelope
         return (
             <div>
+                <div className='row' style={{margin: 15}}>
+                    <button onClick={() => this.props.history.goBack()} className='btn btn-sm btn-primary'>Back</button>                     
+               </div>
                 <div className="container" style={{marginTop: '30px'}}>
                     <div className="row">
                         <div className="col-md-6 col-md-offset-3">
@@ -61,11 +64,11 @@ export default class Customer extends Component {
                             </div>
                             
                             <div className="row">
-                                <div className="col-md-12" style={{textAlign: 'center'}}>
+                                <div className="col-md-9 col-md-offset-3">
                                     
-                                    <h3>{phone}</h3>
-                                    <h3>{address}</h3>
-                                    <h3>{email}</h3>
+                                    <h4><span className='glyphicon glyphicon-phone-alt' style={{margin: 15}}></span>{phone}</h4>
+                                    <h4><span className='glyphicon glyphicon-home' style={{margin: 15}}></span>{address}</h4>
+                                    <h4><span className='glyphicon glyphicon-envelope' style={{margin: 15}}></span>{email}</h4>
                                     {taxExemtContent}
                                     <br/>
                                 </div>

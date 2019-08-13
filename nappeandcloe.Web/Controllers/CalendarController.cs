@@ -45,20 +45,22 @@ namespace nappeandcloe.Web.Controllers
             return calendarEvents;
         }
 
-        [Route("GetCalendarEventsByDay/{month}/{year}/{day}")]
+        [Route("GetDay/{month}/{year}/{day}")]
         [HttpGet]
-        public IEnumerable<CalendarEvent> GetCalendarEventsByDay(int month, int year, int day)
+        public DayView GetDay(int month, int year, int day)
         {
-            OrderRepository orderRepo = new OrderRepository(_connectionString);
             HebCalRepository hebCalrepo = new HebCalRepository();
-
-            List<CalendarEvent> calendarEvents = hebCalrepo.GetJewishEvents(month, year).ToList();
-            calendarEvents.AddRange(orderRepo.GetOrdersForCalendar(month, year));
-
+            OrderRepository orderRepo = new OrderRepository(_connectionString);
             OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
-            if (order.Date.HasValue && order.Date.Value.Year == year && order.Date.Value.Month == month)
+            OrderViewRepository viewRepo = new OrderViewRepository(_connectionString, order);
+
+            DayView dayView = new DayView();
+
+            dayView.CalendarEvents = hebCalrepo.GetJewishEvents(month, year).Where(c => c.From.Day == day).ToList();
+
+            if (order.Date.HasValue && order.Date.Value.Year == year && order.Date.Value.Month == month && order.Date.Value.Day == day)
             {
-                calendarEvents.Add(new CalendarEvent
+                dayView.CalendarEvents.Add(new CalendarEvent
                 {
                     title = "Draft",
                     Id = 12212,
@@ -68,7 +70,13 @@ namespace nappeandcloe.Web.Controllers
                 });
             }
 
-            return calendarEvents.Where(c => c.From.Day == day);
+            List<Order> orders = orderRepo.GetOrdersByDate(new DateTime(year, month, day)).ToList();
+
+            dayView.Orders = viewRepo.GetOrderViewsForOrders(orders).ToList();
+
+            return dayView;
         }
+
+        
     }
 }

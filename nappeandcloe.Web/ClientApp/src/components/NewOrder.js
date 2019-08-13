@@ -196,21 +196,6 @@ export default class NewOrder extends Component {
         this.setState(nextState,() => {this.addDraft() } );
     }
 
-    addDiscount = () => {
-        const nextState = produce(this.state, draft => {
-            draft.order.discount = draft.order.discount + 1;
-        });
-        this.setState(nextState,() => {this.addDraft() } );
-    }
-
-    minusDiscount = () => {
-        if (this.state.order.discount > 0){
-            const nextState = produce(this.state, draft => {
-                draft.order.discount = draft.order.discount - 1;
-            });
-            this.setState(nextState,() => {this.addDraft() } );
-        }
-    }
 
     addLiner = () => {
         if(this.state.order.date){
@@ -230,21 +215,18 @@ export default class NewOrder extends Component {
         }
     }
 
-
-    addDelivaryCharge = () => {
+    discountChange = (e) => {
         const nextState = produce(this.state, draft => {
-            draft.order.deliveryCharge = draft.order.deliveryCharge + 1;
+            draft.order.discount = e
         });
         this.setState(nextState,() => {this.addDraft() } );
     }
 
-    minusDelivaryCharge = () => {
-        if (this.state.order.deliveryCharge > 0){
-            const nextState = produce(this.state, draft => {
-                draft.order.deliveryCharge = draft.order.deliveryCharge - 1;
-            });
-            this.setState(nextState,() => {this.addDraft() } );
-        }
+    deliveryChargeChange = (e) => {
+        const nextState = produce(this.state, draft => {
+            draft.order.deliveryCharge = e
+        });
+        this.setState(nextState,() => {this.addDraft() } );
     }
 
     setLinerContent = () => {
@@ -285,7 +267,7 @@ export default class NewOrder extends Component {
  
         const {date, customer, liner, name, notes, productViews, tax, deliveryCharge, discount, total, discuntAmount, taxExemt, address} = this.state.order;
         const {onInputChange, viewCustomer, changeCustomer, startOver, ViewProducts, viewProduct, setLinerContent, onLinerChange,
-            priceChange, changeDate, checkExecmt, addDiscount, minusDiscount, addDelivaryCharge, minusDelivaryCharge,
+            priceChange, changeDate, checkExecmt, discountChange, deliveryChargeChange,
               addLiner, minusLiner, submit, amountChange} = this;
               const {message} = this.state;
 
@@ -396,10 +378,10 @@ export default class NewOrder extends Component {
                         <div className="col-md-12" style={{marginTop: '15px'}}>
                     <table style={{textAlign: 'center'}} className="table table-striped">
                         <tr style={{textAlign: 'center'}}>
-                        <th style={{textAlign:'center'}}>Remove</th>
-                            <th style={{textAlign:'center'}}>Size</th>
-                            <th style={{textAlign:'center'}}>Amount</th>
-                            <th style={{textAlign:'center'}}>Your Price</th>
+                             <th style={{textAlign:'center'}}>Remove</th>
+                             <th style={{textAlign:'center'}}>Size</th>
+                             <th style={{textAlign:'center'}}>Amount</th>
+                             <th style={{textAlign:'center', width: '20%'}}>Your Price</th>
                         </tr>
                         {p.productSizeViews.map((d) => <tr key={d.productId} >
                             <td>
@@ -446,24 +428,29 @@ export default class NewOrder extends Component {
                         <tr>
                             
                             <td colSpan={4}>
-                                <h4 style={{marginTop: '15px'}}>Delivery Charge:
-                                    <h7>
-                                        <label onClick={minusDelivaryCharge} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-minus"></label>
-                                            $ {deliveryCharge} 
-                                        <label onClick={addDelivaryCharge} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-plus"></label>
-                                    </h7>
+                                <h4 style={{marginTop: '15px'}}>Delivery Charge
+                                <span style={{margin: 10}}>:</span>
+                                <span style={{margin: 10}}>$</span>
+                                <InputNumeric
+                                    value={deliveryCharge}
+                                    onChange={(e) => deliveryChargeChange(e)}
+                                    min={0}
+                                />
                                 </h4>
                         </td>
                         </tr>
                         <tr>
                             <td colSpan={4}>
-                                <h4 style={{marginTop: '15px'}}>Discount:
-                                    <h7>
-                                        <label onClick={minusDiscount} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-minus"></label>
-                                        {discount} %
-                                        <span onClick={addDiscount} style={{cursor: 'pointer', margin:'10px'}} className="glyphicon glyphicon-plus"></span>
-                                    </h7>
-                                <strong>{format('USD', discuntAmount)}</strong></h4>
+                                <h4 style={{marginTop: '15px'}}>Discount
+                                <span style={{margin: 10}}>:</span>
+                                    <InputNumeric
+                                        value={discount}
+                                        onChange={(e) => discountChange(e)}
+                                        min={0}
+                                    />
+                                    <span style={{margin: 10}}>%</span>
+                                    <strong>{format('USD', discuntAmount)}</strong>
+                                </h4>
                         </td>
                         </tr>
                         <tr>
@@ -493,8 +480,11 @@ export default class NewOrder extends Component {
         return (
             <div>
                 <div className="container">
+                <div className='row' style={{margin: 15}}>
+                    <button onClick={() => this.props.history.goBack()} className='btn btn-sm btn-primary'>Back</button>                     
+               </div>
                     <div className="row">
-                        <div className="col-md-6 col-md-offset-3" style={{textAlign: 'center', marginTop: '30px'}}>
+                        <div className="col-md-6 col-md-offset-3" style={{textAlign: 'center', marginTop: 20}}>
                             <button className="btn btn-link" onClick={startOver}><h4>Start Over</h4></button>
                         </div>
                         <div className="col-md-10 col-md-offset-1" style={{border: '1px solid', borderRadius: '5px', padding: '10px'}}>
