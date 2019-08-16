@@ -98,10 +98,11 @@ namespace nappeandcloe.Web.Controllers
 
         [Route("UpdateProduct")]
         [HttpPost]
-        public void UpdateProduct(Product product)
+        public Product UpdateProduct(Product product)
         {
             ProductRepository productRepo = new ProductRepository(_connectionString);
             productRepo.UpdateProduct(product);
+            return product;
         }
 
         #region
@@ -120,6 +121,31 @@ namespace nappeandcloe.Web.Controllers
         {
             ProductRepository productRepo = new ProductRepository(_connectionString);
             return productRepo.GetAllProducts();
+        }
+
+        [Route("GetEditProduct/{productId}")]
+        [HttpGet]
+        public ProductEditView GetEditProduct(int productId)
+        {
+            ProductRepository productRepo = new ProductRepository(_connectionString);
+            ProductEditView product = new ProductEditView();
+            Product p = productRepo.GetProductById(productId);
+            if (p == null)
+            {
+                return new ProductEditView();
+            }
+            product.Product = p;
+           
+            product.ProductSizeViews = p.ProductSizes.Select((s) => new ProductSizeView
+            {
+                Id = s.Id,
+                Size = s.Size.Name,
+                Quantity = s.Quantity,
+            }).ToList();
+
+            product.Tags = productRepo.GetLabelsByProductId(productId).ToList();
+
+            return product;
         }
 
         [Route("GetAllLabels")]
@@ -155,6 +181,10 @@ namespace nappeandcloe.Web.Controllers
             OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
 
             Product p =  productRepo.GetProductById(productId);
+            if (p == null)
+            {
+                return new ProductView();
+            }
             ProductView productView = new ProductView
             {
                 Id = p.Id,
@@ -226,6 +256,18 @@ namespace nappeandcloe.Web.Controllers
         public int Quantity { get; set; }
     }
 
-   
+    public class ProductEditView
+    {
+        public ProductEditView()
+        {
+            ProductSizeViews = new List<ProductSizeView>();
+            Tags = new List<Label>();
+        }
+        public Product Product { get; set; }
+        public List<ProductSizeView> ProductSizeViews { get; set; }
+        public List<Label> Tags { get; set; }
+    }
 
+
+   
 }

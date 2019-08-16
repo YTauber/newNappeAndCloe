@@ -28,6 +28,17 @@ namespace nappeandcloe.Data
             }
         }
 
+        public void UpdateCustomer(Customer customer)
+        {
+            using (var context = new MyContext(_connectionString))
+            {
+                context.Customers.Attach(customer);
+                context.Entry(customer).State = EntityState.Modified;
+                context.SaveChanges();
+            }
+        }
+
+
         public IEnumerable<Customer> GetAllCustomers()
         {
             using (MyContext context = new MyContext(_connectionString))

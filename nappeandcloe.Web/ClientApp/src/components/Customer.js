@@ -18,7 +18,9 @@ export default class Customer extends Component {
     componentDidMount = () => {
 
         axios.get(`/api/customer/getCustomerbyid/${this.props.match.params.id}`).then(({ data }) => {
-            
+            if (!data.id){
+                this.props.history.push('/customers')
+            }
             this.setState({ customer: data, loading: false });
             
         });
@@ -34,11 +36,17 @@ export default class Customer extends Component {
         })
     }
 
+    edit = () => {
+
+        const {id} = this.state.customer;
+        this.props.history.push(`/addCustomer/${id}`);
+    }
+
     render() {
 
         const {customer} = this.state;
         const {name, phone, address, email, taxExemt} = customer
-        const {addCustomer} = this;
+        const {addCustomer, edit} = this;
 
         let taxExemtContent= '';
         if (taxExemt){
@@ -73,6 +81,11 @@ export default class Customer extends Component {
                                     <br/>
                                 </div>
                                 <button className="btn btn-success btn-block btn-lg" onClick={addCustomer}>Add To Order</button>
+                            </div>
+                            <div className='row'>
+                                <div className='col-md-6 col-md-offset-3' style={{textAlign: 'center', marginTop: 20}}>
+                                    <button onClick={edit} className='btn btn-sm btn-info'>Edit</button>
+                                </div>
                             </div>
                         </div>
                     </div>

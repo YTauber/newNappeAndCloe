@@ -56,6 +56,7 @@ namespace nappeandcloe.Data
             }
         }
 
+   
         public int AddSize(string size)
         {
             using (MyContext context = new MyContext(_connectionString))
@@ -78,6 +79,10 @@ namespace nappeandcloe.Data
         {
             using (MyContext context = new MyContext(_connectionString))
             {
+                if (context.ProductSizes.Any(p => p.ProductId == productSize.ProductId && p.SizeId == productSize.SizeId))
+                {
+                    return;
+                }
                 context.ProductSizes.Add(productSize);
                 context.SaveChanges();
             }
@@ -136,7 +141,15 @@ namespace nappeandcloe.Data
         {
             using (MyContext context = new MyContext(_connectionString))
             {
-                return context.Labels.OrderBy(l => l.Name).ToList();
+                return context.Labels.Where(l => l.ProductLabels.Count > 0).OrderBy(l => l.Name).ToList();
+            }
+        }
+
+        public IEnumerable<Label> GetLabelsByProductId(int productId)
+        {
+            using (MyContext context = new MyContext(_connectionString))
+            {
+                return context.Labels.Where(l => l.ProductLabels.Any(p => p.ProductId == productId)).ToList();
             }
         }
 
@@ -144,7 +157,7 @@ namespace nappeandcloe.Data
         {
             using (MyContext context = new MyContext(_connectionString))
             {
-                return context.Sizes.OrderBy(l => l.Name).ToList();
+                return context.Sizes.Where(s => s.ProductSizes.Count() > 0).OrderBy(l => l.Name).ToList();
             }
         }
 
@@ -187,8 +200,6 @@ namespace nappeandcloe.Data
             using (var context = new MyContext(_connectionString))
             {
                 context.ProductLabels.RemoveRange(context.ProductLabels.Where(p => p.ProductId == product.Id));
-                context.ProductLabels.AddRange(product.ProductLabels);
-
                 context.Products.Attach(product);
                 context.Entry(product).State = EntityState.Modified;
                 context.SaveChanges();

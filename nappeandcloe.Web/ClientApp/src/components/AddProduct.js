@@ -2,20 +2,22 @@ import React, { Component } from 'react';
 import {produce} from 'immer';
 import axios from 'axios';
 import ReactTags from 'react-tag-autocomplete';
-import NumberFormat from 'react-number-format';
 
 export default class AddProduct extends Component {
     state = {
         product : {
+            id:'',
             name : '',
             price : '',
             notes : '',
-            pictureName: 'Default.jpg'
+            pictureName: 'Default.jpg',
+            sizes:[],
+            tags : [],
         },
-        sizes:[],
-        tags : [],
         suggestions : [],
         message: '',
+
+        hideButton:'',
         
     }
 
@@ -25,11 +27,24 @@ export default class AddProduct extends Component {
 
             const nextState = produce(this.state, draft => {
                 draft.suggestions = data;
-                draft.sizes.push({})
+                draft.product.sizes.push({})
             });
             this.setState(nextState);
 
         });
+
+        if (this.props.match.params.id){
+
+            axios.get(`/api/product/getEditProduct/${this.props.match.params.id}`).then(({ data }) => {
+            
+                const nextState = produce(this.state, draft => {
+                    draft.product = data.product;
+                    draft.product.sizes = data.productSizeViews;
+                    draft.product.tags = data.tags;
+                });
+                this.setState(nextState);
+            });
+        }
     }
 
     onInputChange = e => {
@@ -41,8 +56,7 @@ export default class AddProduct extends Component {
 
     onAddClick = () => {
 
-        const {name, price, notes, pictureName} = this.state.product;
-        let {tags, sizes} = this.state;
+        let {id, name, price, notes, pictureName, tags, sizes} = this.state.product;
         tags = tags.map(t => t.name)
 
         if (!name){
@@ -61,32 +75,54 @@ export default class AddProduct extends Component {
        
 
         else {
+            if (!id){
+                axios.post( '/api/product/addproduct', {name, price, notes, pictureName}).then(({data}) => {
 
-        axios.post( '/api/product/addproduct', {name, price, notes, pictureName}).then(({data}) => {
-
-                const productId = data.id;
-                axios.post('/api/product/addlabels', {tags, productId}).then(() => {
-
-                    axios.post('/api/product/addSizes', {sizes, productId}).then(() => {
-                
-                        this.props.history.push('/Inventory');
+                    const productId = data.id;
+                    axios.post('/api/product/addlabels', {tags, productId}).then(() => {
+    
+                        axios.post('/api/product/addSizes', {sizes, productId}).then(() => {
+                    
+                            this.props.history.push('/Inventory');
+                        });
                     });
                 });
-            });
+    
+            }
+            else{
+                axios.post( '/api/product/updateproduct', {id, name, price, notes, pictureName}).then(({data}) => {
 
+                    const productId = data.id;
+                    axios.post('/api/product/addlabels', {tags, productId}).then(() => {
+    
+                        axios.post('/api/product/addSizes', {sizes, productId}).then(() => {
+                    
+                            this.props.history.push(`/viewProduct/${id}`);
+                        });
+                    });
+                });
+    
+            }
+            this.setState({hideButton: true})
+        
         }
        
     }
 
     handleDelete = (i) => {
-        const tags = this.state.tags.slice(0)
-        tags.splice(i, 1)
-        this.setState({ tags })
+        const tags = this.state.product.tags.slice(0)
+        const nextState = produce(this.state, draft => {
+            draft.product.tags.splice(i, 1)
+        });
+        this.setState(nextState);
       }
      
       handleAddition = (tag) => {
-        const tags = [].concat(this.state.tags, tag)
-          this.setState({ tags })
+        const tags = [].concat(this.state.product.tags, tag)
+        const nextState = produce(this.state, draft => {
+            draft.product.tags = tags
+        });
+        this.setState(nextState);
       }
 
       onFileChange = (e) => {
@@ -109,7 +145,7 @@ export default class AddProduct extends Component {
       addSize = () => {
 
         const nextState = produce(this.state, draft => {
-            draft.sizes.push({})
+            draft.product.sizes.push({})
         });
         this.setState(nextState);
       }
@@ -117,7 +153,7 @@ export default class AddProduct extends Component {
       removeSize = (idx) => {
 
         const nextState = produce(this.state, draft => {
-            draft.sizes.splice(idx, 1);
+            draft.product.sizes.splice(idx, 1);
         });
         this.setState(nextState);
       }
@@ -125,21 +161,39 @@ export default class AddProduct extends Component {
       changeSize = (e, idx) => {
 
         const nextState = produce(this.state, draft => {
-            draft.sizes[idx][e.target.name] = e.target.value
+            draft.product.sizes[idx][e.target.name] = e.target.value
         });
         this.setState(nextState);
       }
      
     render() {
-        const {product, tags, suggestions, message, sizes} = this.state;
+        const {product, suggestions, message, hideButton} = this.state;
         const {onInputChange, onAddClick, handleAddition, handleDelete, onFileChange, addSize, removeSize, changeSize} = this;
-        const {name, price, notes, pictureName} = product;
+        const {id, name, price, notes, pictureName, sizes, tags} = product;
 
         let messg = '';
         if (message) {
             messg = (<div style={{textAlign: 'center'}} className="alert alert-danger" role="alert">
             {message}
           </div>)
+        }
+
+        let buttonContent = '';
+        if (!hideButton){
+            if(id){
+                buttonContent=(
+                    <div style={{marginTop : 30}} className="col-md-12">
+                            <button onClick={onAddClick} className="btn btn-info btn-block">Update Product</button>
+                        </div>
+                )
+            }
+            else{
+                buttonContent=(
+                    <div style={{marginTop : 30}} className="col-md-12">
+                            <button onClick={onAddClick} className="btn btn-primary btn-block">Add Product</button>
+                        </div>
+                )
+            }
         }
         const styles = {
             marginTop : 20
@@ -195,7 +249,7 @@ export default class AddProduct extends Component {
                                 </thead>
                                 <tbody>
                                     {sizes.map((s, idx) => <tr id={idx} key={idx}>
-                                        <td>{idx === 0 ? '' : <h5 onClick={() => removeSize(idx)} style={{cursor: 'pointer'}} className="glyphicon glyphicon-remove-sign"></h5>}</td>
+                                        <td>{idx === 0 || id ? '' : <h5 onClick={() => removeSize(idx)} style={{cursor: 'pointer'}} className="glyphicon glyphicon-remove-sign"></h5>}</td>
                                         <td><input name='size' className='form-control' type='text' value={s.size} placeholder='Size' onChange={(e) => changeSize(e, idx)} /></td>
                                         <td><input name='quantity' className='form-control' type='text' value={s.quantity} placeholder='Quantity' onChange={(e) => changeSize(e, idx)} /></td>
                                     </tr>)}
@@ -208,9 +262,7 @@ export default class AddProduct extends Component {
                         <div className="col-md-12">
                             {messg}
                         </div>
-                        <div style={{marginTop : 30}} className="col-md-12">
-                            <button onClick={onAddClick} className="btn btn-info btn-block">Add Product</button>
-                        </div>
+                        {buttonContent}
                     </div>
                 </div>
             </div>

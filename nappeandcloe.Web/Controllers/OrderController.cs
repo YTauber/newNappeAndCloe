@@ -28,6 +28,19 @@ namespace nappeandcloe.Web.Controllers
             return liner.Id;
         }
 
+        [HttpGet]
+        [Route("GetOrderById/{orderId}")]
+        public OrderView GetOrderById(int orderId)
+        {
+            OrderRepository OrderRepo = new OrderRepository(_connectionString);
+
+            OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
+            OrderViewRepository viewRepo = new OrderViewRepository(_connectionString, order);
+
+            Order o = OrderRepo.GetOrdersById(orderId);
+            return viewRepo.GetOrderViewForOrder(o);
+        }
+
         [HttpPost]
         [Route("AddOrder")]
         public void AddOrder() 

@@ -34,12 +34,18 @@ export default class Product extends Component {
 
     setProduct = () => {
         const{date} = this.state;
+        const id = this.props.match.params;
 
-        axios.get(`/api/product/getproductbyid/${this.props.match.params.id}/${date.getMonth() + 1}/${date.getFullYear()}`).then(({ data }) => {
-            
-            this.setState({ product: data, loading: false });
-        });
-
+       
+       axios.get(`/api/product/getproductbyid/${this.props.match.params.id}/${date.getMonth() + 1}/${date.getFullYear()}`).then(({ data }) => {
+         
+        if(!data.id){
+            this.props.history.push('/inventory')
+        }
+         this.setState({ product: data, loading: false });
+         });
+       
+       
     }
 
 
@@ -80,7 +86,8 @@ export default class Product extends Component {
     }
 
     edit = () => {
-
+        const{id} = this.state.product;
+        this.props.history.push(`/addproduct/${id}`);
     }
 
     onChangeDate = (d) => {
@@ -143,7 +150,7 @@ export default class Product extends Component {
                                 </div>
                                 {notesBox}
                                 <div className="col-md-12" style={{textAlign: 'center'}}>
-                                  {productLabels.map(l => <button style={{margin: '5px'}} key={l.label.id} className="btn">{l.label.name}</button>)}
+                                  {productLabels.map(l => <button style={{margin: '5px'}} key={l.label.id} className="btn btn-info">{l.label.name}</button>)}
                                 </div>
                                 <div className="col-md-12" style={{marginTop: '25px'}}>
                                     <table className="table">

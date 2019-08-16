@@ -17,8 +17,7 @@ namespace nappeandcloe.Data
 
         public IEnumerable<OrderView> GetOrderViewsForOrders(List<Order> orders)
         {
-            CostumerRepository costumerRepo = new CostumerRepository(_connectionString);
-            ProductRepository productRepo = new ProductRepository(_connectionString);
+            
 
 
             List<OrderView> orderViews = new List<OrderView>();
@@ -26,54 +25,61 @@ namespace nappeandcloe.Data
 
             foreach (Order o in orders)
             {
-                OrderView orderView = new OrderView
-                {
-                    Id = o.Id,
-                    Name = o.Name,
-                    Address = o.Address,
-                    Date = o.Date,
-                    DeliveryCharge = o.DeliveryCharge,
-                    Discount = o.Discount,
-                    Notes = o.Notes,
-                    TaxExemt = o.TaxExemt,
-                    CustomerId = o.CustomerId,
-                    Customer = costumerRepo.GetCustomerById(o.CustomerId)
-                };
-
-                foreach (OrderDetail od in o.OrderDetails)
-                {
-                    Product product = productRepo.GetProductByProductSizeId(od.ProductSizeId);
-                    ProductView productView = orderView.ProductViews.FirstOrDefault(p => p.Id == product.Id);
-                    if (productView == null)
-                    {
-                        productView = new ProductView
-                        {
-                            Id = product.Id,
-                            Name = product.Name,
-                            Price = product.Price,
-                            PictureName = product.PictureName,
-                            Notes = product.Notes
-                        };
-                        orderView.ProductViews.Add(productView);
-                    }
-
-                    productView.ProductSizeViews.Add(new ProductSizeView
-                    {
-                        Id = od.Id,
-                        Size = productRepo.GetSizeById(productRepo.GetProductSizeById(od.ProductSizeId).SizeId).Name,
-                        Quantity = od.Quantity,
-                        PricePer = productView.Price,
-                        MinAvail = productRepo.GetMinAvail(o.Date, od.ProductSizeId),
-                        MaxAvail = productRepo.GetMaxAvail(o.Date, od.ProductSizeId),
-                        Checked = order.ProductViews.Any(pr => pr.ProductSizeViews.Any(sz => sz.Id == od.ProductSizeId)),
-                        OrderAmount = GetOrderAmount(od.ProductSizeId),
-                        OrderPrice = od.PricePer
-                    });
-                }
-                orderView = SetTotal(orderView);
-                orderViews.Add(orderView);
+                orderViews.Add(GetOrderViewForOrder(o));
             }
             return orderViews;
+        }
+
+        public OrderView GetOrderViewForOrder(Order o)
+        {
+            CostumerRepository costumerRepo = new CostumerRepository(_connectionString);
+            ProductRepository productRepo = new ProductRepository(_connectionString);
+            OrderView orderView = new OrderView
+            {
+                Id = o.Id,
+                Name = o.Name,
+                Address = o.Address,
+                Date = o.Date,
+                DeliveryCharge = o.DeliveryCharge,
+                Discount = o.Discount,
+                Notes = o.Notes,
+                TaxExemt = o.TaxExemt,
+                CustomerId = o.CustomerId,
+                Customer = costumerRepo.GetCustomerById(o.CustomerId)
+            };
+
+            foreach (OrderDetail od in o.OrderDetails)
+            {
+                Product product = productRepo.GetProductByProductSizeId(od.ProductSizeId);
+                ProductView productView = orderView.ProductViews.FirstOrDefault(p => p.Id == product.Id);
+                if (productView == null)
+                {
+                    productView = new ProductView
+                    {
+                        Id = product.Id,
+                        Name = product.Name,
+                        Price = product.Price,
+                        PictureName = product.PictureName,
+                        Notes = product.Notes
+                    };
+                    orderView.ProductViews.Add(productView);
+                }
+
+                productView.ProductSizeViews.Add(new ProductSizeView
+                {
+                    Id = od.Id,
+                    Size = productRepo.GetSizeById(productRepo.GetProductSizeById(od.ProductSizeId).SizeId).Name,
+                    Quantity = od.Quantity,
+                    PricePer = productView.Price,
+                    MinAvail = productRepo.GetMinAvail(o.Date, od.ProductSizeId),
+                    MaxAvail = productRepo.GetMaxAvail(o.Date, od.ProductSizeId),
+                    Checked = order.ProductViews.Any(pr => pr.ProductSizeViews.Any(sz => sz.Id == od.ProductSizeId)),
+                    OrderAmount = GetOrderAmount(od.ProductSizeId),
+                    OrderPrice = od.PricePer
+                });
+            }
+            orderView = SetTotal(orderView);
+            return orderView;
         }
 
 

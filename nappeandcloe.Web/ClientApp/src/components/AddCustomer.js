@@ -7,13 +7,26 @@ import NumberFormat from 'react-number-format';
 export default class AddCustomer extends Component {
     state = {
         customer : {
+            id:'',
             name : '',
             phone : '',
             address : '',
             email : '',
             taxExemt: false
         },
-        message : ''
+        message : '',
+        hideButton: ''
+    }
+
+    componentDidMount = () => {
+        if (this.props.match.params.id){
+
+            axios.get(`/api/customer/getCustomerbyid/${this.props.match.params.id}`).then(({ data }) => {
+            
+                this.setState({ customer: data });
+                
+            });
+        }
     }
 
     onInputChange = e => {
@@ -32,7 +45,7 @@ export default class AddCustomer extends Component {
 
     addCustomer = () => {
 
-        const {name, phone, address, email, taxExemt} = this.state.customer;
+        const {id, name, phone, address, email, taxExemt} = this.state.customer;
         
         if (!name){
             this.setState({message : 'You didn\'t enter a valid name... :('})
@@ -40,20 +53,25 @@ export default class AddCustomer extends Component {
       
         else {
 
-        axios.post( '/api/customer/addcustomer', {name, phone, address, email, taxExemt}).then(({data}) => {
-
+            if(!id){
+                axios.post( '/api/customer/addcustomer', {name, phone, address, email, taxExemt}).then(({data}) => {
+                    this.props.history.push(`/customer/${data.id}`);
+                });
+            }
+            else{
+                axios.post( '/api/customer/updatecustomer', {id, name, phone, address, email, taxExemt}).then(({data}) => {
+                    this.props.history.push(`/customer/${data.id}`);
+                });
                 
-                this.props.history.push(`/customer/${data.id}`);
-            });
-            
-
+            }
+            this.setState({hideButton: true});
         }
        
     }
     render() {
 
-        const {customer, message} = this.state;
-        const {name, phone, address, email, taxExemt} = customer;
+        const {customer, message, hideButton} = this.state;
+        const {id, name, phone, address, email, taxExemt} = customer;
         const {onInputChange, addCustomer, checkExemt} = this;
 
         let messg = '';
@@ -61,6 +79,20 @@ export default class AddCustomer extends Component {
             messg = (<div style={{textAlign: 'center'}} className="alert alert-danger" role="alert">
             {message}
           </div>)
+        }
+
+        let buttonContent = '';
+        if(!hideButton){
+            if(!id){
+                buttonContent = (
+                    <button style={{marginTop: '10px'}} onClick={addCustomer} className="btn btn-primary btn-block">Add Customer</button>
+                )
+            }
+            else{
+                buttonContent = (
+                    <button style={{marginTop: '10px'}} onClick={addCustomer} className="btn btn-info btn-block">Update Customer</button>
+                )
+            }
         }
 
         return (
@@ -83,7 +115,7 @@ export default class AddCustomer extends Component {
                                 <br />
                                 <h7><input type="checkBox" checked={taxExemt} onChange={checkExemt} /><label>Tax Exempt</label></h7>
                                 <br/>
-                                <button style={{marginTop: '10px'}} onClick={addCustomer} className="btn btn-primary btn-block">Add Customer</button>
+                                {buttonContent}
                             </div>
                         </div>
                     </div>

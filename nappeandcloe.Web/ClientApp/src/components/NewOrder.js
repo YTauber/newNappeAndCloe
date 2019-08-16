@@ -3,7 +3,6 @@ import axios from 'axios';
 import produce from 'immer';
 import moment from 'moment';
 import { format } from 'money-formatter';
-import NumericInput from 'react-numeric-input';
 import Calendar from 'react-calendar';
 import InputNumeric from 'react-input-numeric';
 
@@ -151,11 +150,10 @@ export default class NewOrder extends Component {
     }
 
     priceChange = (e, id) => {
-
         if(e.target.value){
             const nextState = produce(this.state, draft => {
 
-                draft.order.productViews.find(p => p.productSizeViews.some(s => s.id ===id)).productSizeViews.find(d => d.id === id).price = e.target.value
+                draft.order.productViews.find(p => p.productSizeViews.some(s => s.id ===id)).productSizeViews.find(d => d.id === id).orderPrice = e.target.value
             });
             this.setState(nextState,() => {this.addDraft() } );
         }
@@ -412,7 +410,7 @@ export default class NewOrder extends Component {
                                         style={{marginLeft: '25%', width: '50%'}}
                                         type="text" 
                                         className="form-control" 
-                                        value={d.pricePer} 
+                                        value={d.orderPrice} 
                                         onChange={(e) => priceChange(e, d.id)} />
                                 </div>
                             </td>

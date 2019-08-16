@@ -10,6 +10,7 @@ import AddCustomer from './components/AddCustomer';
 import Customer from './components/Customer';
 import NewOrder from './components/NewOrder';
 import ViewDay from './components/ViewDay';
+import ViewOrder from './components/ViewOrder';
 
 export default class App extends Component {
   displayName = App.name
@@ -19,13 +20,14 @@ export default class App extends Component {
       <Layout>
         <Route exact path='/' component={Home} />
         <Route path='/Inventory' component={Inventory} />
-        <Route path='/AddProduct' component={AddProduct} />
+        <Route path='/AddProduct/:id?' component={AddProduct} />
         <Route path='/ViewProduct/:id' component={Product} />
         <Route path='/Customers' component={Customers} />
-        <Route path='/AddCustomer' component={AddCustomer} />
+        <Route path='/AddCustomer/:id?' component={AddCustomer} />
         <Route path='/Customer/:id' component={Customer} />
-        <Route path='/NewOrder' component={NewOrder} />
+        <Route path='/NewOrder/:id?' component={NewOrder} />
         <Route path='/ViewDay/:month/:day/:year' component={ViewDay} />
+        <Route path='/ViewOrder/:id' component={ViewOrder} />
       </Layout>
     );
   }

@@ -28,6 +28,15 @@ namespace nappeandcloe.Web.Controllers
             return customer;
         }
 
+        [Route("UpdateCustomer")]
+        [HttpPost]
+        public Customer UpdateCustomer(Customer customer)
+        {
+            CostumerRepository costumerRepo = new CostumerRepository(_connectionString);
+            costumerRepo.UpdateCustomer(customer);
+            return customer;
+        }
+
         [Route("GetAllCustomers")]
         [HttpGet]
         public IEnumerable<Customer> GetAllCustomers()
