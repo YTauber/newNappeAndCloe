@@ -34,7 +34,6 @@ export default class Product extends Component {
 
     setProduct = () => {
         const{date} = this.state;
-        const id = this.props.match.params;
 
        
        axios.get(`/api/product/getproductbyid/${this.props.match.params.id}/${date.getMonth() + 1}/${date.getFullYear()}`).then(({ data }) => {

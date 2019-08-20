@@ -79,11 +79,17 @@ namespace nappeandcloe.Data
         {
             using (MyContext context = new MyContext(_connectionString))
             {
-                if (context.ProductSizes.Any(p => p.ProductId == productSize.ProductId && p.SizeId == productSize.SizeId))
+                ProductSize ps = context.ProductSizes.FirstOrDefault(p => p.ProductId == productSize.ProductId && p.SizeId == productSize.SizeId);
+                if (ps == null)
                 {
-                    return;
+                    context.ProductSizes.Add(productSize);
                 }
-                context.ProductSizes.Add(productSize);
+                else
+                {
+                    ps.Quantity = productSize.Quantity;
+                    context.ProductSizes.Attach(ps);
+                    context.Entry(ps).State = EntityState.Modified;
+                }
                 context.SaveChanges();
             }
         }
@@ -202,6 +208,16 @@ namespace nappeandcloe.Data
                 context.ProductLabels.RemoveRange(context.ProductLabels.Where(p => p.ProductId == product.Id));
                 context.Products.Attach(product);
                 context.Entry(product).State = EntityState.Modified;
+                context.SaveChanges();
+            }
+        }
+
+        public void UpdateSize(Size size)
+        {
+            using (var context = new MyContext(_connectionString))
+            {
+                context.Sizes.Attach(size);
+                context.Entry(size).State = EntityState.Modified;
                 context.SaveChanges();
             }
         }

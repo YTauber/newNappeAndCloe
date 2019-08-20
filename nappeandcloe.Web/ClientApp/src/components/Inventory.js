@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-
+import produce from 'immer'
 import Loader from 'react-loader-spinner';
 
 
@@ -20,6 +20,7 @@ export default class Inventory extends Component {
         loading: true,
         
         tags: [],
+        editSizesMode: ''
     }
 
     
@@ -56,7 +57,7 @@ export default class Inventory extends Component {
             
             this.setState({ products: data });
 
-            let {products, searchContent, searchId, searchSizeId} = this.state;
+            let {products, searchContent, searchId, searchSizeId, labels, sizes} = this.state;
 
             if (searchId){
                 
@@ -69,6 +70,7 @@ export default class Inventory extends Component {
              }
 
             products = products.filter(p => p.name.toLowerCase().includes(searchContent.toLowerCase()));
+
 
             this.setState({products, loading: false});
         });
@@ -83,8 +85,11 @@ export default class Inventory extends Component {
     }
 
     sizeClicked = (id) => {
-        this.setState({searchSizeId: id});
+        if (!this.state.editSizesMode){
+            this.setState({searchSizeId: id});
             this.setProducts();
+        }
+       
     }
 
     search = (e) => {
@@ -98,12 +103,27 @@ export default class Inventory extends Component {
         this.props.history.push(`/viewProduct/${id}`)
     }
 
+    updateSizes = () => {
+        const {sizes} = this.state;
+        axios.post(`/api/product/updateSizes`, {sizes});
+        this.setState({editSizesMode: false})
+    }
 
+    editSizes = () => {
+        this.setState({editSizesMode: true})
+    }
+
+    changeSize = (e, id) => {
+        const nextState = produce(this.state, draft => {
+            draft.sizes.find(s => s.id === id).name = e.target.value;
+        });
+        this.setState(nextState);
+    }
 
     render() {
 
-        const {products, labels, searchContent, searchId, loading, sizes, searchSizeId} = this.state;
-        const {tagClicked, search, viewProduct, sizeClicked} = this;
+        const {products, labels, searchContent, searchId, loading, sizes, searchSizeId, editSizesMode} = this.state;
+        const {tagClicked, search, viewProduct, sizeClicked, changeSize, updateSizes, editSizes} = this;
 
         
         const tagStyle = {
@@ -136,16 +156,28 @@ export default class Inventory extends Component {
                 <div className="container">
                     <div className='row'>
                     <div className='col-md-3'>
-                    <div style={{marginTop: 25, textAlign: 'center'}}>
+                            <div style={{marginTop: 25, textAlign: 'center'}}>
                                 <label>Sizes</label>
                             </div>
                             <hr />
                             <div onClick={() => {sizeClicked()}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
                                 <h4>View All Sizes</h4>
                             </div>
-                        {sizes.map(s => <div key={s.id} onClick={() => {sizeClicked(s.id)}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
-                                {searchSizeId === s.id ? <h3>{s.name}</h3> : <h4>{s.name}</h4>}
+                        {sizes.filter(l => products.some(p => p.productSizes.some(s => s.sizeId === l.id)))
+                            .map(s => <div key={s.id} onClick={() => {sizeClicked(s.id)}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
+                                {editSizesMode ? 
+                            <input style={{margin: 5, width: '90%'}} type='text' value={s.name} className='form-control' placeholder='Size' onChange={(e) => {changeSize(e, s.id)}} />
+                                : 
+                            searchSizeId === s.id ? <h3>{s.name}</h3> : <h4>{s.name}</h4>
+                            }
                             </div>)}
+                            <div className='col-md-12'>
+                                {!editSizesMode ? 
+                                    <button className='btn btn-sm btn-block btn-warning' onClick={editSizes}>Edit Sizes</button>
+                                        :
+                                    <button className='btn btn-sm btn-block btn-success' onClick={updateSizes}>Update Sizes</button>
+                                }
+                            </div>
                     </div>
                     <div className="col-md-6">
                         <div className='row'>
@@ -169,7 +201,7 @@ export default class Inventory extends Component {
                    
                     <div style={{textAlign: 'center'}}>
                             {products.map((p) => (
-                                <div className="row well" onClick={() => viewProduct(p.id)} style={{cursor: 'pointer'}}>
+                                <div key={p.id} className="row well" onClick={() => viewProduct(p.id)} style={{cursor: 'pointer'}}>
                                     <div className="col-md-3" style={{margin: 5, textAlign: 'center'}}>
                                             <img src={`/UploadedImages/${p.pictureName}`} alt="pic" className="img-responsive" style={{maxHeight: '75px', borderRadius: '50%'}} />
                                     </div>
@@ -190,7 +222,8 @@ export default class Inventory extends Component {
                             </div>
                             <hr />
                             <h1 style={tagStyle} onClick={() => {tagClicked()}} className={searchId ? "btn btn-info sm" : "btn btn-info"}>View All</h1>
-                                {labels.map(l => <h1 style={tagStyle} onClick={() => {tagClicked(l.id)}} className={searchId === l.id ? "btn btn-info" : "btn btn-info btn-sm"} key={l.id}>{l.name}</h1>)}
+                                {labels.filter(l => products.some(p => p.productLabels.some(s => s.labelId === l.id)))
+                                    .map(l => <h1 style={tagStyle} onClick={() => {tagClicked(l.id)}} className={searchId === l.id ? "btn btn-primary" : "btn btn-info"} key={l.id}>{l.name}</h1>)}
                         </div>
                    </div>
                 </div>

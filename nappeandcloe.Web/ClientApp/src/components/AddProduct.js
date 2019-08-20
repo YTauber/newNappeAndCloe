@@ -249,9 +249,9 @@ export default class AddProduct extends Component {
                                 </thead>
                                 <tbody>
                                     {sizes.map((s, idx) => <tr id={idx} key={idx}>
-                                        <td>{idx === 0 || id ? '' : <h5 onClick={() => removeSize(idx)} style={{cursor: 'pointer'}} className="glyphicon glyphicon-remove-sign"></h5>}</td>
-                                        <td><input name='size' className='form-control' type='text' value={s.size} placeholder='Size' onChange={(e) => changeSize(e, idx)} /></td>
-                                        <td><input name='quantity' className='form-control' type='text' value={s.quantity} placeholder='Quantity' onChange={(e) => changeSize(e, idx)} /></td>
+                                        <td>{idx === 0 || s.id ? '' : <h5 onClick={() => removeSize(idx)} style={{cursor: 'pointer'}} className="glyphicon glyphicon-remove-sign"></h5>}</td>
+                                        <td>{s.id ? <div  style={{textAlign: 'center'}}><h7>{s.size}</h7></div> : <input name='size' className='form-control' type='text' value={s.size} placeholder='Size' onChange={(e) => changeSize(e, idx)} />}</td>
+                                        <td style={{width: '40%'}}><input name='quantity' className='form-control' type='text' value={s.quantity} placeholder='Quantity' onChange={(e) => changeSize(e, idx)} /></td>
                                     </tr>)}
                                     <tr>
                                         <td style={{textAlign: 'center'}} colSpan={3}><button onClick={addSize} className="btn"><h3 className="glyphicon glyphicon-plus"></h3></button></td>

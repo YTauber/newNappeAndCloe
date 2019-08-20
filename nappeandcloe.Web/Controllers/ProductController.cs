@@ -105,6 +105,18 @@ namespace nappeandcloe.Web.Controllers
             return product;
         }
 
+        [Route("UpdateSizes")]
+        [HttpPost]
+        public void UpdateSizes(Inventory inventory)
+        {
+            ProductRepository productRepo = new ProductRepository(_connectionString);
+            
+            foreach(Size s in inventory.Sizes)
+            {
+                productRepo.UpdateSize(s);
+            }
+        }
+
         #region
         //[Route("AddTags")]
         //[HttpPost]
@@ -121,6 +133,16 @@ namespace nappeandcloe.Web.Controllers
         {
             ProductRepository productRepo = new ProductRepository(_connectionString);
             return productRepo.GetAllProducts();
+        }
+
+        [Route("GetInventory")]
+        [HttpGet]
+        public Inventory GetInventory()
+        {
+            OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
+            OrderViewRepository viewRepo = new OrderViewRepository(_connectionString, order);
+
+            return viewRepo.GetInventory();
         }
 
         [Route("GetEditProduct/{productId}")]
@@ -179,40 +201,17 @@ namespace nappeandcloe.Web.Controllers
             ProductRepository productRepo = new ProductRepository(_connectionString);
             OrderRepository orderRepo = new OrderRepository(_connectionString);
             OrderView order = HttpContext.Session.Get<OrderView>("order") ?? new OrderView();
+            OrderViewRepository viewRepo = new OrderViewRepository(_connectionString, order);
 
             Product p =  productRepo.GetProductById(productId);
             if (p == null)
             {
                 return new ProductView();
             }
-            ProductView productView = new ProductView
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                Notes = p.Notes,
-                PictureName = p.PictureName,
-                ProductLabels = p.ProductLabels,
 
-                ProductSizeViews = p.ProductSizes.Select((s) => new ProductSizeView
-                {
-                    Id = s.Id,
-                    Size = s.Size.Name,
-                    PricePer = p.Price,
-                    Quantity = s.Quantity,
+            ProductView productView = viewRepo.GetProductViewForProduct(p);
 
-                    MinAvail = 0,
-
-                    MaxAvail = order.Date == null ? 0 : productRepo.GetMaxAvail(order.Date.Value, s.Id),
-                    Checked = order.ProductViews.Any(pr => pr.ProductSizeViews.Any(sz => sz.Id == s.Id)),
-
-                    OrderPrice = p.Price,
-                    OrderAmount = GetOrderAmount(s.Id)
-
-                }).ToList(),
-
-                CalendarEvents = orderRepo.GetOrdersForCalendarByProductId(month, year, p.Id).ToList()
-            };
+            productView.CalendarEvents = orderRepo.GetOrdersForCalendarByProductId(month, year, p.Id).ToList();
             if (order.Date.HasValue && order.Date.Value.Year == year && order.Date.Value.Month == month)
             {
                 productView.CalendarEvents.Add(new CalendarEvent
@@ -268,6 +267,6 @@ namespace nappeandcloe.Web.Controllers
         public List<Label> Tags { get; set; }
     }
 
-
+   
    
 }

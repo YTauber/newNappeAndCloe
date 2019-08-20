@@ -82,6 +82,58 @@ namespace nappeandcloe.Data
             return orderView;
         }
 
+        public Inventory GetInventory()
+        {
+            ProductRepository productRepo = new ProductRepository(_connectionString);
+            Inventory inventory = new Inventory();
+
+            foreach (Product p in productRepo.GetAllProducts())
+            {
+                inventory.ProductViews.Add(GetProductViewForProduct(p));
+            }
+
+            inventory.Sizes = productRepo.GetAllSizes().ToList();
+            inventory.Labels = productRepo.GetAllLabels().ToList();
+
+            return inventory;
+        }
+
+        public ProductView GetProductViewForProduct(Product p)
+        {
+            ProductRepository productRepo = new ProductRepository(_connectionString);
+            OrderRepository orderRepo = new OrderRepository(_connectionString);
+
+            ProductView productView = new ProductView
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                Notes = p.Notes,
+                PictureName = p.PictureName,
+                ProductLabels = p.ProductLabels,
+
+                ProductSizeViews = p.ProductSizes.Select((s) => new ProductSizeView
+                {
+                    Id = s.Id,
+                    Size = s.Size.Name,
+                    PricePer = p.Price,
+                    Quantity = s.Quantity,
+
+                    MinAvail = 0,
+
+                    MaxAvail = order.Date == null ? 0 : productRepo.GetMaxAvail(order.Date.Value, s.Id),
+                    Checked = order.ProductViews.Any(pr => pr.ProductSizeViews.Any(sz => sz.Id == s.Id)),
+
+                    OrderPrice = p.Price,
+                    OrderAmount = GetOrderAmount(s.Id)
+
+                }).ToList(),
+
+            };
+           
+            return productView;
+        }
+
 
         public OrderView SetTotal(OrderView order)
         {
