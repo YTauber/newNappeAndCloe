@@ -8,18 +8,19 @@ import Loader from 'react-loader-spinner';
 
 export default class Inventory extends Component {
     state={
-        products : [],
-        productLabels : [],
-        labels : [],
-        sizes: [],
+        inventory: {
+            productViews : [],
+            labels : [],
+            sizes: [],
+        },
 
+        productDisplay: [],
         searchContent: '',
-        searchId: '',
-        searchSizeId: '',
+        searchIds: [],
+        searchSizeIds: [],
 
         loading: true,
-        
-        tags: [],
+        errorMessage : '',
         editSizesMode: ''
     }
 
@@ -27,76 +28,45 @@ export default class Inventory extends Component {
 
     componentDidMount = () => {
 
-        this.setProducts();
-        this.setLabels();
-        this.setSizes();
-        
-
-    }
-    setLabels = () => {
-
-        axios.get('/api/product/getalllabels').then(({ data }) => {
-            
-            this.setState({ labels: data });
-        });
+       axios.get('/api/product/getInventory').then(({data}) => {
+           this.setState({inventory: data, loading: false, productDisplay: data.productViews})
+       })
     }
 
-    setSizes = () => {
-
-        axios.get('/api/product/getallSizes').then(({ data }) => {
-            
-            this.setState({ sizes: data });
-        });
-    }
-
-
-    setProducts = () => {
-
-
-        axios.get('/api/product/getallproducts').then(({ data }) => {
-            
-            this.setState({ products: data });
-
-            let {products, searchContent, searchId, searchSizeId, labels, sizes} = this.state;
-
-            if (searchId){
-                
-                products = products.filter(p => p.productLabels.some(l => l.labelId === searchId));
-              }
-
-            if (searchSizeId){
-                
-                products = products.filter(p => p.productSizes.some(l => l.sizeId === searchSizeId));
-             }
-
-            products = products.filter(p => p.name.toLowerCase().includes(searchContent.toLowerCase()));
-
-
-            this.setState({products, loading: false});
-        });
-
-    }
-    
-
-   
     tagClicked = (id) => {
-        this.setState({searchId: id});
-            this.setProducts();
+        const{searchIds} = this.state;
+        const nextState = produce(this.state, draft => {
+
+            if (searchIds.some(i => i === id)){
+                draft.searchIds = draft.searchIds.filter(s => s !== id)
+            }
+            else{
+                draft.searchIds.push(id);
+            }
+        });
+        this.setState(nextState, () => {this.setFilters()});
     }
 
     sizeClicked = (id) => {
         if (!this.state.editSizesMode){
-            this.setState({searchSizeId: id});
-            this.setProducts();
+            const{searchSizeIds} = this.state;
+        const nextState = produce(this.state, draft => {
+
+            if (searchSizeIds.some(i => i === id)){
+                draft.searchSizeIds = draft.searchSizeIds.filter(s => s !== id)
+            }
+            else{
+                draft.searchSizeIds.push(id);
+            }
+        });
+        this.setState(nextState, () => {this.setFilters()});
         }
        
     }
 
     search = (e) => {
 
-        this.setState({searchContent: e.target.value})
-        this.setProducts();
-
+        this.setState({searchContent: e.target.value}, () => {this.setFilters()})
     }
 
     viewProduct = (id) => {
@@ -104,9 +74,15 @@ export default class Inventory extends Component {
     }
 
     updateSizes = () => {
-        const {sizes} = this.state;
-        axios.post(`/api/product/updateSizes`, {sizes});
-        this.setState({editSizesMode: false})
+        const {sizes} = this.state.inventory;
+        const distinctSizes = [...new Set(sizes.map(s => s.name))];
+        if (sizes.length > distinctSizes.length){
+            this.setState({errorMessage: 'You can\'t name two sizes the same'})
+        }
+        else{
+            axios.post(`/api/product/updateSizes`, {sizes});
+            this.setState({editSizesMode: false, errorMessage: ''})
+        }
     }
 
     editSizes = () => {
@@ -115,15 +91,35 @@ export default class Inventory extends Component {
 
     changeSize = (e, id) => {
         const nextState = produce(this.state, draft => {
-            draft.sizes.find(s => s.id === id).name = e.target.value;
+            draft.inventory.sizes.find(s => s.id === id).name = e.target.value;
         });
         this.setState(nextState);
     }
 
+    clearFilters = () => {
+        this.setState({searchIds : [], searchSizeIds: [], searchContent: ''}, () => {this.setFilters()})
+    }
+
+    setFilters = () => {
+        let{searchContent, searchIds, searchSizeIds, inventory, productDisplay} = this.state;
+        let{productViews} = inventory;
+        
+            productDisplay = productViews.filter(p => p.name.toLowerCase().includes(searchContent.toLowerCase()));
+
+            if (searchIds.length){
+                productDisplay = productDisplay.filter(p => searchIds.every(s => p.productLabels.map(l => l.labelId).includes(s)))
+            }
+            if (searchSizeIds.length){
+                productDisplay = productDisplay.filter(p => searchSizeIds.every(s => p.productSizes.map(l => l.sizeId).includes(s)))
+            }
+           this.setState({productDisplay});
+    }
+
     render() {
 
-        const {products, labels, searchContent, searchId, loading, sizes, searchSizeId, editSizesMode} = this.state;
-        const {tagClicked, search, viewProduct, sizeClicked, changeSize, updateSizes, editSizes} = this;
+        const {searchContent, searchIds, loading, searchSizeIds, editSizesMode, inventory, productDisplay, errorMessage} = this.state;
+        const{labels, sizes} = inventory
+        const {tagClicked, search, viewProduct, sizeClicked, changeSize, updateSizes, editSizes, clearFilters} = this;
 
         
         const tagStyle = {
@@ -135,6 +131,14 @@ export default class Inventory extends Component {
         const divStyle = {
             marginTop : 25
         }
+
+        let messg = '';
+       if (errorMessage) {
+           messg = (<div style={{textAlign: 'center'}} className="alert alert-danger" role="alert">
+                        {errorMessage}
+                   </div>)
+          }
+
        
         let content = '';
         if (loading){
@@ -160,17 +164,16 @@ export default class Inventory extends Component {
                                 <label>Sizes</label>
                             </div>
                             <hr />
-                            <div onClick={() => {sizeClicked()}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
-                                <h4>View All Sizes</h4>
-                            </div>
-                        {sizes.filter(l => products.some(p => p.productSizes.some(s => s.sizeId === l.id)))
-                            .map(s => <div key={s.id} onClick={() => {sizeClicked(s.id)}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
+                        {sizes.map(s => <div key={s.id} onClick={() => {sizeClicked(s.id)}} style={{border: '1px solid', margin: 15, padding: 5, textAlign: 'center', borderRadius: '5px', cursor: 'pointer'}}>
                                 {editSizesMode ? 
                             <input style={{margin: 5, width: '90%'}} type='text' value={s.name} className='form-control' placeholder='Size' onChange={(e) => {changeSize(e, s.id)}} />
                                 : 
-                            searchSizeId === s.id ? <h3>{s.name}</h3> : <h4>{s.name}</h4>
+                            searchSizeIds.some(i => i === s.id) ? <h2>{s.name}</h2> : <h4>{s.name}</h4>
                             }
                             </div>)}
+                            <div className='col-md-12'>
+                                {messg}
+                            </div>
                             <div className='col-md-12'>
                                 {!editSizesMode ? 
                                     <button className='btn btn-sm btn-block btn-warning' onClick={editSizes}>Edit Sizes</button>
@@ -190,9 +193,14 @@ export default class Inventory extends Component {
                                 <div className="col-md-12" style={divStyle}>
                                     <input type="text" placeholder="Search name..." className="form-control" onChange={search} value={searchContent} />
                                 </div>
-                                <div className="col-md-12">
-                                    <div className="col-md-1 col-md-offset-11">
-                                            <h4>{products.length}</h4>
+                                <div style={{marginTop: 10}} className="col-md-12">
+                                    <div style={{display:'inline', float:'left'}} className='col-md-3'>
+                                        {searchIds.length || searchContent || searchSizeIds.length ?
+                                        <button onClick={clearFilters} className='btn btn-sm btn-block btn-success'>Clear Filters</button>
+                                        : ''}
+                                    </div>
+                                    <div className="col-md-1 col-md-offset-8">
+                                            <h4>{productDisplay.length}</h4>
                                     </div>
                                 </div>
                             </div>
@@ -200,7 +208,7 @@ export default class Inventory extends Component {
                        
                    
                     <div style={{textAlign: 'center'}}>
-                            {products.map((p) => (
+                            {productDisplay.map((p) => (
                                 <div key={p.id} className="row well" onClick={() => viewProduct(p.id)} style={{cursor: 'pointer'}}>
                                     <div className="col-md-3" style={{margin: 5, textAlign: 'center'}}>
                                             <img src={`/UploadedImages/${p.pictureName}`} alt="pic" className="img-responsive" style={{maxHeight: '75px', borderRadius: '50%'}} />
@@ -221,9 +229,7 @@ export default class Inventory extends Component {
                                 <label>Labels</label>
                             </div>
                             <hr />
-                            <h1 style={tagStyle} onClick={() => {tagClicked()}} className={searchId ? "btn btn-info sm" : "btn btn-info"}>View All</h1>
-                                {labels.filter(l => products.some(p => p.productLabels.some(s => s.labelId === l.id)))
-                                    .map(l => <h1 style={tagStyle} onClick={() => {tagClicked(l.id)}} className={searchId === l.id ? "btn btn-primary" : "btn btn-info"} key={l.id}>{l.name}</h1>)}
+                                {labels.map(l => <h1 style={tagStyle} onClick={() => {tagClicked(l.id)}} className={searchIds.some(i => i === l.id) ? "btn btn-primary" : "btn btn-info"} key={l.id}>{l.name}</h1>)}
                         </div>
                    </div>
                 </div>

@@ -111,6 +111,7 @@ namespace nappeandcloe.Data
                 Notes = p.Notes,
                 PictureName = p.PictureName,
                 ProductLabels = p.ProductLabels,
+                ProductSizes = p.ProductSizes,
 
                 ProductSizeViews = p.ProductSizes.Select((s) => new ProductSizeView
                 {
