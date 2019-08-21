@@ -22,7 +22,7 @@ export default class Customer extends Component {
                 this.props.history.push('/customers')
             }
             this.setState({ customer: data, loading: false });
-            
+           
         });
 
     }
@@ -74,9 +74,9 @@ export default class Customer extends Component {
                             <div className="row">
                                 <div className="col-md-9 col-md-offset-3">
                                     
-                                    <h4><span className='glyphicon glyphicon-phone-alt' style={{margin: 15}}></span>{phone}</h4>
-                                    <h4><span className='glyphicon glyphicon-home' style={{margin: 15}}></span>{address}</h4>
-                                    <h4><span className='glyphicon glyphicon-envelope' style={{margin: 15}}></span>{email}</h4>
+                                    {phone ? <h4><span className='glyphicon glyphicon-phone-alt' style={{margin: 15}}></span>{phone}</h4> : ''}
+                                    {address ? <h4><span className='glyphicon glyphicon-home' style={{margin: 15}}></span>{address}</h4> : ''}
+                                    {email ? <h4><span className='glyphicon glyphicon-envelope' style={{margin: 15}}></span>{email}</h4> : ''}
                                     {taxExemtContent}
                                     <br/>
                                 </div>

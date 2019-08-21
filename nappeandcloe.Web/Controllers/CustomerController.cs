@@ -45,6 +45,14 @@ namespace nappeandcloe.Web.Controllers
             return costumerRepo.GetAllCustomers();
         }
 
+        [Route("GetAllCustomerNames")]
+        [HttpGet]
+        public IEnumerable<string> GetAllCustomerNames()
+        {
+            CostumerRepository costumerRepo = new CostumerRepository(_connectionString);
+            return costumerRepo.GetAllCustomerNames();
+        }
+
         [Route("GetCustomerById/{customerId}")]
         [HttpGet]
         public Customer GetCustomerById(int customerId)

@@ -133,8 +133,8 @@ export default class Product extends Component {
                 <div className='container' style={{marginTop: 50}}>
                     <div className="row">
                         <div className="col-md-6 col-md-offset-3">
-                            <div className="col-md-12">
-                                <div className="col-md-4 col-md-offset-4">
+                            <div className="col-md-12" style={{border: '1px solid', borderRadius: '5px'}}>
+                                <div style={{marginTop: 15}} className="col-md-4 col-md-offset-4">
                                      <img src={`/UploadedImages/${pictureName}`} alt='pic' className="img-responsive" style={{maxHeight: '200px', borderRadius: '50%'}} />
                                 </div>
                                 <div className="col-md-12" style={{textAlign: 'center'}}>
@@ -143,8 +143,6 @@ export default class Product extends Component {
                                 <div className="row">
                                     <div className="col-md-12" style={{textAlign: 'center'}}>
                                         <h4>{format('USD', price)} each</h4>
-                                        <h4>fooo</h4>
-                                        <h4>fooo</h4>
                                     </div>
                                 </div>
                                 {notesBox}
@@ -161,17 +159,16 @@ export default class Product extends Component {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {productSizeViews.map((s) => <tr key={s.id}>
+                                            {productSizeViews.filter(s => s.quantity).map((s) => <tr key={s.id}>
                                                 <td style={{textAlign: 'center'}}>
                                                     <input checked={s.checked} onClick={() => checkOrderId(s.id)} type='checkBox' />
-                                                    {s.checked && s.maxAvail ? <InputNumeric
+                                                    {s.checked ? <InputNumeric
                                                                         value={s.orderAmount}
                                                                         onChange={(e) => amountChange(e, s.id)}
                                                                         min={s.minAvail}
-                                                                        max={s.maxAvail}
                                                                     /> : ''}
                                                                     <br />
-                                                    {s.maxAvail ? <label style={{marginTop: 10}}>{s.maxAvail} Available</label> : ''}
+                                                    {s.maxAvail ? <label style={{marginTop: 10, color: s.orderAmount > s.maxAvail ? 'red' : ''}}>{s.maxAvail} Available</label> : ''}
                                                 </td>
                                                 <td style={{textAlign: 'center'}}><h3>{s.size}</h3></td>
                                                 <td style={{textAlign: 'center'}}><h3>{s.quantity}</h3></td>
@@ -179,9 +176,8 @@ export default class Product extends Component {
                                         </tbody>
                                     </table>
                                 </div>
-                                <div className='row'>
-                                    
                                 </div>
+                                <div className='col-md-12'>
                                 {mssgeContent}
                                 <div className="row">
                                     <div className="col-md-12" style={{marginTop: 25}}>

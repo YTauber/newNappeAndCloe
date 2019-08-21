@@ -145,7 +145,7 @@ namespace nappeandcloe.Data
             order.DiscuntAmount = 0;
             foreach (ProductSizeView size in order.ProductViews.SelectMany(p => p.ProductSizeViews))
             {
-                order.Total += size.OrderAmount * size.PricePer;
+                order.Total += size.OrderAmount * size.OrderAmount;
             }
             order.Total += order.Liner.Quantity * order.Liner.Cahrge;
             order.Total += order.DeliveryCharge;

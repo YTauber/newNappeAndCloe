@@ -127,12 +127,12 @@ namespace nappeandcloe.Web.Controllers
         //}
         #endregion
 
-        [Route("GetAllProducts")]
+        [Route("GetAllProductNames")]
         [HttpGet]
-        public IEnumerable<Product> GetAllProducts()
+        public IEnumerable<string> GetAllProductNames()
         {
             ProductRepository productRepo = new ProductRepository(_connectionString);
-            return productRepo.GetAllProducts();
+            return productRepo.GetAllProductNames();
         }
 
         [Route("GetInventory")]

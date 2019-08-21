@@ -129,8 +129,17 @@ namespace nappeandcloe.Data
         {
             using (MyContext context = new MyContext(_connectionString))
             {
-                return context.Products.Include(p => p.ProductLabels).ThenInclude(l => l.Label)
+                return context.Products.Where(p => p.ProductSizes.Count > 0).Include(p => p.ProductLabels).ThenInclude(l => l.Label)
                     .Include(s => s.ProductSizes).ThenInclude(s => s.Size)
+                    .ToList();
+            }
+        }
+
+        public IEnumerable<string> GetAllProductNames()
+        {
+            using (MyContext context = new MyContext(_connectionString))
+            {
+                return context.Products.Where(p => p.ProductSizes.Count > 0).Select(p => p.Name)
                     .ToList();
             }
         }

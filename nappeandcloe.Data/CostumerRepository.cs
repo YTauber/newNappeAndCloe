@@ -47,6 +47,14 @@ namespace nappeandcloe.Data
             }
         }
 
+        public IEnumerable<string> GetAllCustomerNames()
+        {
+            using (MyContext context = new MyContext(_connectionString))
+            {
+                return context.Customers.Select(c => c.Name).ToList();
+            }
+        }
+
         public Customer GetCustomerById(int customerId)
         {
             using (MyContext context = new MyContext(_connectionString))

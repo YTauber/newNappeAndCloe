@@ -77,7 +77,7 @@ export default class Inventory extends Component {
         const {sizes} = this.state.inventory;
         const distinctSizes = [...new Set(sizes.map(s => s.name))];
         if (sizes.length > distinctSizes.length){
-            this.setState({errorMessage: 'You can\'t name two sizes the same'})
+            this.setState({errorMessage: 'You shouldn\'t name two sizes the same'})
         }
         else{
             axios.post(`/api/product/updateSizes`, {sizes});
@@ -112,7 +112,7 @@ export default class Inventory extends Component {
             if (searchSizeIds.length){
                 productDisplay = productDisplay.filter(p => searchSizeIds.every(s => p.productSizes.map(l => l.sizeId).includes(s)))
             }
-           this.setState({productDisplay});
+            this.setState({productDisplay})
     }
 
     render() {

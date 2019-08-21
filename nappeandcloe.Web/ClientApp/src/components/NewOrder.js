@@ -73,12 +73,12 @@ export default class NewOrder extends Component {
 
     addDraft = () => {
 
-        const {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt} = this.state.order;
+        const {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt, address} = this.state.order;
         if (date){
-            axios.post(`/api/draft/addorderdraft`, {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt}).then(({data}) => this.setTotals(data))
+            axios.post(`/api/draft/addorderdraft`, {customerId, name, date, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt, address}).then(({data}) => this.setTotals(data))
         }
         else {
-        axios.post(`/api/draft/addorderdraft`, {customerId, name, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt}).then(({data}) => this.setTotals(data))
+        axios.post(`/api/draft/addorderdraft`, {customerId, name, tax, deliveryCharge, discount, notes, linerId, productViews, taxExemt, address}).then(({data}) => this.setTotals(data))
         }
     }
 
@@ -398,10 +398,9 @@ export default class NewOrder extends Component {
                                     value={d.orderAmount}
                                     onChange={(e) => amountChange(e, d.id)}
                                     min={d.minAvail}
-                                    max={d.maxAvail}
                                 />
                                <br />
-                               {d.maxAvail ? <label style={{marginTop: 10}}>{d.maxAvail} Available</label> : ''}
+                               {d.maxAvail ? <label style={{marginTop: 10, color: d.orderAmount > d.maxAvail ? 'red' : ''}}>{d.maxAvail} Available</label> : ''}
                             </td>
                             <td>
                                 <div style={{textAlign:'center'}}>

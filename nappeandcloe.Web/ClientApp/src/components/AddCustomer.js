@@ -15,7 +15,9 @@ export default class AddCustomer extends Component {
             taxExemt: false
         },
         message : '',
-        hideButton: ''
+        hideButton: '',
+        errorMessage : '',
+        customerNames : []
     }
 
     componentDidMount = () => {
@@ -26,12 +28,22 @@ export default class AddCustomer extends Component {
                 this.setState({ customer: data });
                 
             });
+           
         }
+
+        axios.get('/api/customer/getAllCustomerNames').then(({data}) => {
+            this.setState({customerNames: data})
+        })
     }
 
     onInputChange = e => {
+
+        const {customerNames} = this.state;
+
         const nextState = produce(this.state, draft => {
             draft.customer[e.target.name] = e.target.value;
+            draft.errorMessage = e.target.name === 'name' && customerNames.some(c => c.toLowerCase() === e.target.value.toLowerCase())
+            
         });
         this.setState(nextState);
     }
@@ -70,7 +82,7 @@ export default class AddCustomer extends Component {
     }
     render() {
 
-        const {customer, message, hideButton} = this.state;
+        const {customer, message, hideButton, errorMessage} = this.state;
         const {id, name, phone, address, email, taxExemt} = customer;
         const {onInputChange, addCustomer, checkExemt} = this;
 
@@ -105,6 +117,7 @@ export default class AddCustomer extends Component {
                         <div className="col-md-4 col-md-offset-4">
                             <div className="well">
                                 {messg}
+                                {errorMessage ? <label style={{color : 'red'}}>You already have a customer with this name</label> : ''}
                                 <input name="name" type="text" className="form-control" placeholder="Name" value={name} onChange={onInputChange} />
                                 <br />
                                 <NumberFormat className="form-control" placeholder="Phone" value={phone} onChange={onInputChange} name="phone" format="1 (###) ###-####" mask="_"/>

@@ -18,6 +18,9 @@ export default class AddProduct extends Component {
         message: '',
 
         hideButton:'',
+
+        productNames : [],
+        errorMessage: ''
         
     }
 
@@ -45,11 +48,17 @@ export default class AddProduct extends Component {
                 this.setState(nextState);
             });
         }
+
+        axios.get('/api/product/getAllProductNames').then(({data}) => {
+            this.setState({productNames: data})
+        })
     }
 
     onInputChange = e => {
+        const {productNames} = this.state;
         const nextState = produce(this.state, draft => {
             draft.product[e.target.name] = e.target.value;
+            draft.errorMessage = e.target.name === 'name' && productNames.some(p => p.toLowerCase() === e.target.value.toLowerCase())
         });
         this.setState(nextState);
     }
@@ -131,7 +140,7 @@ export default class AddProduct extends Component {
         formData.append('file', e.target.files[0])
 
         axios.post('api/product/addpicture' , formData).then(({data}) => {
-            
+
             const nextState = produce(this.state, draft => {
                 draft.product.pictureName = data
             });
@@ -167,7 +176,7 @@ export default class AddProduct extends Component {
       }
      
     render() {
-        const {product, suggestions, message, hideButton} = this.state;
+        const {product, suggestions, message, hideButton, errorMessage} = this.state;
         const {onInputChange, onAddClick, handleAddition, handleDelete, onFileChange, addSize, removeSize, changeSize} = this;
         const {id, name, price, notes, pictureName, sizes, tags} = product;
 
@@ -221,6 +230,7 @@ export default class AddProduct extends Component {
                            <input style={{display: 'none'}} type="file" onChange={onFileChange} ref={fileInput => this.fileInput = fileInput} />
                         </div>
                         <div style={styles} className="col-md-12">
+                        {errorMessage ? <label style={{color : 'red'}}>You already have a table cloth with this name</label> : ''}
                            <input type="text" name="name" value={name} onChange={onInputChange} placeholder="Name" className="form-control" />
                         </div>
                         <div style={styles} className="col-md-6">

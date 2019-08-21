@@ -111,10 +111,6 @@ namespace nappeandcloe.Web.Controllers
             foreach (ProductSizeView size in order.ProductViews.SelectMany(p => p.ProductSizeViews))
             {
                 size.MaxAvail = order.Date == null ? 0 : productRepo.GetMaxAvail(order.Date.Value, size.Id);
-                if (size.OrderAmount > size.MaxAvail)
-                {
-                    size.OrderAmount = size.MaxAvail;
-                }
             }
 
             return order;
@@ -129,7 +125,7 @@ namespace nappeandcloe.Web.Controllers
             order.DiscuntAmount = 0;
             foreach (ProductSizeView size in order.ProductViews.SelectMany(p => p.ProductSizeViews))
             {
-                order.Total += size.OrderAmount * size.PricePer;
+                order.Total += size.OrderAmount * size.OrderPrice;
             }
             order.Total += order.Liner.Quantity * order.Liner.Cahrge;
             order.Total += order.DeliveryCharge;
